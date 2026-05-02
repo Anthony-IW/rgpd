@@ -167,7 +167,7 @@ export default function AuditDetail() {
                             {q.reference && <p className="mt-0.5 text-xs text-muted-foreground">{q.reference}{q.weight && q.weight > 1 ? ` · poids ${q.weight}` : ""}</p>}
                           </div>
                           <Select value={r.level} onValueChange={(v) => updateResponse(q, cat.id, { level: v })}>
-                            <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+                            <SelectTrigger className="w-full sm:w-52"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               {Object.entries(COMPLIANCE_LEVELS).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
                             </SelectContent>

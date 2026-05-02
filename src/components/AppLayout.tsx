@@ -25,7 +25,7 @@ export default function AppLayout() {
             <SidebarTrigger />
             <div className="h-1 flex-1 rounded-full bg-phoenix opacity-70" />
           </header>
-          <main className="flex-1 p-4 md:p-8">
+          <main className="flex-1 p-3 sm:p-4 md:p-8 min-w-0 overflow-x-hidden">
             <Outlet />
           </main>
         </div>
