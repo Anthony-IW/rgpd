@@ -16,6 +16,7 @@ import Registry from "./pages/Registry";
 import Actions from "./pages/Actions";
 import Library from "./pages/Library";
 import ClientActions from "./pages/ClientActions";
+import CalendarPage from "./pages/Calendar";
 import { AuthProvider } from "./hooks/useAuth";
 
 const queryClient = new QueryClient();
@@ -40,7 +41,9 @@ const App = () => (
               <Route path="/registre" element={<Registry />} />
               <Route path="/actions" element={<Actions />} />
               <Route path="/bibliotheque" element={<Library />} />
+              <Route path="/calendrier" element={<CalendarPage />} />
               <Route path="/portail/actions" element={<ClientActions />} />
+              <Route path="/portail/calendrier" element={<CalendarPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
