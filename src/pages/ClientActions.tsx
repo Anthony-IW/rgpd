@@ -51,7 +51,7 @@ export default function ClientActions() {
       return;
     }
     const { error } = await supabase.from("action_plans").update({
-      status: newStatus, pending_status: null, pending_comment: null, pending_submitted_by: null, pending_submitted_at: null,
+      status: newStatus as any, pending_status: null, pending_comment: null, pending_submitted_by: null, pending_submitted_at: null,
     }).eq("id", action.id);
     if (error) return toast.error(error.message);
     toast.success("Statut mis à jour");
@@ -61,7 +61,7 @@ export default function ClientActions() {
   const submitValidation = async () => {
     if (!pendingDialog || !user) return;
     const { error } = await supabase.from("action_plans").update({
-      pending_status: pendingDialog.status,
+      pending_status: pendingDialog.status as any,
       pending_comment: comment,
       pending_submitted_by: user.id,
       pending_submitted_at: new Date().toISOString(),
