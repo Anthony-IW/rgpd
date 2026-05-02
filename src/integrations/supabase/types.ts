@@ -263,6 +263,54 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          all_day: boolean
+          color: string | null
+          company_id: string
+          created_at: string
+          description: string | null
+          end_at: string | null
+          id: string
+          location: string | null
+          owner_id: string
+          related_action_id: string | null
+          start_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          all_day?: boolean
+          color?: string | null
+          company_id: string
+          created_at?: string
+          description?: string | null
+          end_at?: string | null
+          id?: string
+          location?: string | null
+          owner_id: string
+          related_action_id?: string | null
+          start_at: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          all_day?: boolean
+          color?: string | null
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          end_at?: string | null
+          id?: string
+          location?: string | null
+          owner_id?: string
+          related_action_id?: string | null
+          start_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           address: string | null
@@ -421,6 +469,33 @@ export type Database = {
           is_template?: boolean | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      notification_log: {
+        Row: {
+          id: string
+          milestone: number
+          recipient_email: string
+          sent_at: string
+          source_id: string
+          source_type: string
+        }
+        Insert: {
+          id?: string
+          milestone: number
+          recipient_email: string
+          sent_at?: string
+          source_id: string
+          source_type: string
+        }
+        Update: {
+          id?: string
+          milestone?: number
+          recipient_email?: string
+          sent_at?: string
+          source_id?: string
+          source_type?: string
         }
         Relationships: []
       }
