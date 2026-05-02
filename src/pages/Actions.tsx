@@ -11,13 +11,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ListChecks, Plus, Trash2 } from "lucide-react";
+import { ListChecks, Plus, Trash2, Hourglass, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { ACTION_STATUS_META, PRIORITY_META } from "@/data/rgpdReferential";
 import { ExportMenu } from "@/components/ExportMenu";
 import { exportActionsXLSX } from "@/lib/exports/excelExport";
 import { printTablePDF } from "@/lib/exports/pdfTable";
 import { fmtDate } from "@/lib/exports/exportHelpers";
+import { ActionAttachments } from "@/components/ActionAttachments";
 
 export default function Actions() {
   const { user } = useAuth();
@@ -50,6 +51,29 @@ export default function Actions() {
     await supabase.from("action_plans").update(patch).eq("id", id);
     setActions((a) => a.map((x) => x.id === id ? { ...x, ...patch } : x));
   };
+
+  const approve = async (a: any) => {
+    await supabase.from("action_plans").update({
+      status: a.pending_status,
+      pending_status: null, pending_comment: null, pending_submitted_by: null, pending_submitted_at: null,
+      validated_by: user!.id, validated_at: new Date().toISOString(), validation_note: null,
+      completed_at: a.pending_status === "conforme" ? new Date().toISOString() : null,
+    }).eq("id", a.id);
+    toast.success("Validation acceptée");
+    const { data } = await supabase.from("action_plans").select("*").eq("company_id", companyId);
+    setActions(data || []);
+  };
+  const reject = async (a: any) => {
+    const note = prompt("Motif du refus (optionnel) :") ?? "";
+    await supabase.from("action_plans").update({
+      pending_status: null, pending_comment: null, pending_submitted_by: null, pending_submitted_at: null,
+      validated_by: user!.id, validated_at: new Date().toISOString(), validation_note: note || "Refusée",
+    }).eq("id", a.id);
+    toast.info("Demande refusée");
+    const { data } = await supabase.from("action_plans").select("*").eq("company_id", companyId);
+    setActions(data || []);
+  };
+
   const remove = async (id: string) => {
     await supabase.from("action_plans").delete().eq("id", id);
     setActions((a) => a.filter((x) => x.id !== id));
@@ -118,24 +142,40 @@ export default function Actions() {
         <div className="space-y-2">
           {actions.map((a) => (
             <Card key={a.id} className="border-2">
-              <CardContent className="flex flex-wrap items-start gap-3 p-4">
-                <div className="flex-1 min-w-[240px]">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium">{a.title}</span>
-                    <Badge variant="outline">{PRIORITY_META[a.priority as keyof typeof PRIORITY_META]?.label}</Badge>
+              <CardContent className="space-y-3 p-4">
+                <div className="flex flex-wrap items-start gap-3">
+                  <div className="flex-1 min-w-[240px]">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium">{a.title}</span>
+                      <Badge variant="outline">{PRIORITY_META[a.priority as keyof typeof PRIORITY_META]?.label}</Badge>
+                      {a.pending_status && (
+                        <Badge className="bg-warning text-warning-foreground"><Hourglass className="mr-1 h-3 w-3" />Validation demandée : {ACTION_STATUS_META[a.pending_status as keyof typeof ACTION_STATUS_META]?.label}</Badge>
+                      )}
+                    </div>
+                    {a.description && <p className="mt-1 text-sm text-muted-foreground">{a.description}</p>}
+                    <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                      {a.responsible && <span>👤 {a.responsible}</span>}
+                      {a.due_date && <span>📅 {new Date(a.due_date).toLocaleDateString("fr-FR")}</span>}
+                      {a.category && <span>🏷️ {a.category}</span>}
+                    </div>
+                    {a.pending_comment && (
+                      <p className="mt-2 rounded border-l-2 border-warning bg-warning/5 p-2 text-xs italic">Commentaire client : « {a.pending_comment} »</p>
+                    )}
                   </div>
-                  {a.description && <p className="mt-1 text-sm text-muted-foreground">{a.description}</p>}
-                  <div className="mt-1 flex flex-wrap gap-3 text-xs text-muted-foreground">
-                    {a.responsible && <span>👤 {a.responsible}</span>}
-                    {a.due_date && <span>📅 {new Date(a.due_date).toLocaleDateString("fr-FR")}</span>}
-                    {a.category && <span>🏷️ {a.category}</span>}
-                  </div>
+                  {a.pending_status ? (
+                    <div className="flex gap-1.5">
+                      <Button size="sm" onClick={() => approve(a)} className="bg-success text-success-foreground hover:bg-success/90"><Check className="mr-1 h-4 w-4" />Valider</Button>
+                      <Button size="sm" variant="outline" onClick={() => reject(a)} className="text-destructive"><X className="mr-1 h-4 w-4" />Refuser</Button>
+                    </div>
+                  ) : (
+                    <Select value={a.status} onValueChange={(v) => update(a.id, { status: v, completed_at: (v === "fait" || v === "conforme") ? new Date().toISOString() : null })}>
+                      <SelectTrigger className="w-full sm:w-44"><SelectValue /></SelectTrigger>
+                      <SelectContent>{Object.entries(ACTION_STATUS_META).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  )}
+                  <Button variant="ghost" size="icon" onClick={() => remove(a.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
                 </div>
-                <Select value={a.status} onValueChange={(v) => update(a.id, { status: v, completed_at: v === "fait" ? new Date().toISOString() : null })}>
-                  <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
-                  <SelectContent>{Object.entries(ACTION_STATUS_META).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent>
-                </Select>
-                <Button variant="ghost" size="icon" onClick={() => remove(a.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                <ActionAttachments actionId={a.id} companyId={a.company_id} />
               </CardContent>
             </Card>
           ))}

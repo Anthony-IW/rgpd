@@ -15,6 +15,7 @@ import AuditDetail from "./pages/AuditDetail";
 import Registry from "./pages/Registry";
 import Actions from "./pages/Actions";
 import Library from "./pages/Library";
+import ClientActions from "./pages/ClientActions";
 import { AuthProvider } from "./hooks/useAuth";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/registre" element={<Registry />} />
               <Route path="/actions" element={<Actions />} />
               <Route path="/bibliotheque" element={<Library />} />
+              <Route path="/portail/actions" element={<ClientActions />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

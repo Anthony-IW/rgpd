@@ -10,6 +10,7 @@ import { Building2, ArrowLeft, Edit, Plus, ClipboardCheck, FileText, ListChecks,
 import { toast } from "sonner";
 import { AUDIT_STATUS_META } from "@/data/rgpdReferential";
 import { ExportMenu } from "@/components/ExportMenu";
+import { CompanyClientsCard } from "@/components/CompanyClientsCard";
 import { exportCompanySheetXLSX } from "@/lib/exports/excelExport";
 import { printTablePDF } from "@/lib/exports/pdfTable";
 import { fmtDate } from "@/lib/exports/exportHelpers";
@@ -184,6 +185,10 @@ export default function CompanyDetail() {
             <Button variant="link" size="sm" onClick={() => navigate(`/actions?company=${id}`)} className="px-0">Gérer →</Button>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mt-6">
+        <CompanyClientsCard companyId={id!} />
       </div>
     </div>
   );

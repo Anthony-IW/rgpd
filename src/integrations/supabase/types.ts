@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      action_attachments: {
+        Row: {
+          action_id: string
+          company_id: string
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          action_id: string
+          company_id: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          action_id?: string
+          company_id?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_attachments_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "action_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       action_plans: {
         Row: {
           audit_id: string | null
@@ -26,12 +70,19 @@ export type Database = {
           id: string
           notes: string | null
           owner_id: string
+          pending_comment: string | null
+          pending_status: Database["public"]["Enums"]["action_status"] | null
+          pending_submitted_at: string | null
+          pending_submitted_by: string | null
           priority: Database["public"]["Enums"]["action_priority"]
           related_question_id: string | null
           responsible: string | null
           status: Database["public"]["Enums"]["action_status"]
           title: string
           updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+          validation_note: string | null
         }
         Insert: {
           audit_id?: string | null
@@ -44,12 +95,19 @@ export type Database = {
           id?: string
           notes?: string | null
           owner_id: string
+          pending_comment?: string | null
+          pending_status?: Database["public"]["Enums"]["action_status"] | null
+          pending_submitted_at?: string | null
+          pending_submitted_by?: string | null
           priority?: Database["public"]["Enums"]["action_priority"]
           related_question_id?: string | null
           responsible?: string | null
           status?: Database["public"]["Enums"]["action_status"]
           title: string
           updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_note?: string | null
         }
         Update: {
           audit_id?: string | null
@@ -62,12 +120,19 @@ export type Database = {
           id?: string
           notes?: string | null
           owner_id?: string
+          pending_comment?: string | null
+          pending_status?: Database["public"]["Enums"]["action_status"] | null
+          pending_submitted_at?: string | null
+          pending_submitted_by?: string | null
           priority?: Database["public"]["Enums"]["action_priority"]
           related_question_id?: string | null
           responsible?: string | null
           status?: Database["public"]["Enums"]["action_status"]
           title?: string
           updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_note?: string | null
         }
         Relationships: [
           {
@@ -288,6 +353,38 @@ export type Database = {
         }
         Relationships: []
       }
+      company_users: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_users_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           category: string
@@ -488,11 +585,22 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_company_client: {
+        Args: { _company_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_client_companies: { Args: { _user_id: string }; Returns: string[] }
     }
     Enums: {
       action_priority: "critique" | "haute" | "moyenne" | "basse"
-      action_status: "a_faire" | "en_cours" | "fait" | "reporte"
-      app_role: "admin" | "auditor"
+      action_status:
+        | "a_faire"
+        | "en_cours"
+        | "fait"
+        | "reporte"
+        | "conforme"
+        | "non_applicable"
+      app_role: "admin" | "auditor" | "client"
       audit_status: "draft" | "in_progress" | "completed" | "archived"
       compliance_level:
         | "conforme"
@@ -635,8 +743,15 @@ export const Constants = {
   public: {
     Enums: {
       action_priority: ["critique", "haute", "moyenne", "basse"],
-      action_status: ["a_faire", "en_cours", "fait", "reporte"],
-      app_role: ["admin", "auditor"],
+      action_status: [
+        "a_faire",
+        "en_cours",
+        "fait",
+        "reporte",
+        "conforme",
+        "non_applicable",
+      ],
+      app_role: ["admin", "auditor", "client"],
       audit_status: ["draft", "in_progress", "completed", "archived"],
       compliance_level: [
         "conforme",
