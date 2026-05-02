@@ -15,6 +15,10 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { LEGAL_BASIS_LABELS } from "@/data/rgpdReferential";
+import { ExportMenu } from "@/components/ExportMenu";
+import { exportRegistryXLSX } from "@/lib/exports/excelExport";
+import { printTablePDF } from "@/lib/exports/pdfTable";
+import { fmtBool, joinList } from "@/lib/exports/exportHelpers";
 
 const empty = {
   name: "", purpose: "", legal_basis: "", legal_basis_details: "",
@@ -80,7 +84,31 @@ export default function Registry() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <PageHeader title="Registre des traitements" description="Article 30 du RGPD" icon={FileText} />
+      <PageHeader
+        title="Registre des traitements"
+        description="Article 30 du RGPD"
+        icon={FileText}
+        actions={
+          <ExportMenu
+            disabled={records.length === 0}
+            onPdf={() => {
+              const c = companies.find((x) => x.id === companyId);
+              printTablePDF({
+                title: "Registre des traitements (Art. 30)",
+                subtitle: c?.name,
+                columns: ["Nom", "Finalité", "Base légale", "Données", "Personnes", "Conservation", "Sensibles", "Hors UE", "AIPD"],
+                rows: records.map((r) => [
+                  r.name, r.purpose,
+                  r.legal_basis ? LEGAL_BASIS_LABELS[r.legal_basis] : "",
+                  joinList(r.data_categories), joinList(r.data_subjects),
+                  r.retention_period, fmtBool(r.sensitive_data), fmtBool(r.international_transfer), fmtBool(r.dpia_required),
+                ]),
+              });
+            }}
+            onExcel={() => exportRegistryXLSX(records, companies.find((x) => x.id === companyId)?.name)}
+          />
+        }
+      />
 
       <Card className="mb-4 border-2"><CardContent className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 p-4">
         <Label className="shrink-0">Entreprise :</Label>
