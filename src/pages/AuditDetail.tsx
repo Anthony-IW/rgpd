@@ -17,6 +17,8 @@ import {
   computeCategoryScore, computeGlobalScore, totalQuestions,
 } from "@/data/rgpdReferential";
 import { generateAuditPDF } from "@/lib/pdfReport";
+import { ExportMenu } from "@/components/ExportMenu";
+import { exportAuditXLSX } from "@/lib/exports/excelExport";
 
 export default function AuditDetail() {
   const { id } = useParams();
@@ -96,6 +98,15 @@ export default function AuditDetail() {
     await generateAuditPDF({ audit, company, responses, globalScore });
   };
 
+  const exportExcel = async () => {
+    if (!audit || !company) return;
+    const [{ data: actions }, { data: processing }] = await Promise.all([
+      supabase.from("action_plans").select("*").eq("company_id", company.id),
+      supabase.from("processing_records").select("*").eq("company_id", company.id),
+    ]);
+    exportAuditXLSX({ audit, company, responses, actions: actions || [], processing: processing || [] });
+  };
+
   if (!audit) return null;
 
   return (
@@ -107,7 +118,7 @@ export default function AuditDetail() {
         icon={ClipboardCheck}
         actions={
           <>
-            <Button variant="outline" onClick={exportPdf}><FileDown className="mr-2 h-4 w-4" />Rapport PDF</Button>
+            <ExportMenu label="Rapport" onPdf={exportPdf} onExcel={exportExcel} />
             <Button onClick={() => saveAudit()} disabled={saving} className="bg-gradient-primary"><Save className="mr-2 h-4 w-4" />Enregistrer</Button>
           </>
         }

@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Plus, Search, Mail, MapPin, Shield } from "lucide-react";
+import { ExportMenu } from "@/components/ExportMenu";
+import { exportCompaniesXLSX } from "@/lib/exports/excelExport";
+import { printTablePDF } from "@/lib/exports/pdfTable";
+import { fmtBool, fmtDate } from "@/lib/exports/exportHelpers";
 
 export default function Companies() {
   const navigate = useNavigate();
@@ -24,13 +28,29 @@ export default function Companies() {
     [c.name, c.city, c.sector, c.siret].filter(Boolean).join(" ").toLowerCase().includes(q.toLowerCase())
   );
 
+  const exportPdf = () => printTablePDF({
+    title: "Liste des entreprises",
+    subtitle: `${filtered.length} entreprise(s)`,
+    filters: q ? `recherche "${q}"` : undefined,
+    columns: ["Nom", "SIRET", "Secteur", "Taille", "Ville", "Contact", "Email", "DPO", "Créée le"],
+    rows: filtered.map((c) => [
+      c.name, c.siret, c.sector, c.size, c.city, c.contact_name, c.contact_email,
+      fmtBool(c.has_dpo), fmtDate(c.created_at),
+    ]),
+  });
+
   return (
     <div className="mx-auto max-w-7xl">
       <PageHeader
         title="Entreprises"
         description="Vos clients audités"
         icon={Building2}
-        actions={<Button onClick={() => navigate("/entreprises/nouveau")} className="bg-gradient-primary"><Plus className="mr-2 h-4 w-4" />Nouvelle entreprise</Button>}
+        actions={
+          <>
+            <ExportMenu disabled={filtered.length === 0} onPdf={exportPdf} onExcel={() => exportCompaniesXLSX(filtered)} />
+            <Button onClick={() => navigate("/entreprises/nouveau")} className="bg-gradient-primary"><Plus className="mr-2 h-4 w-4" />Nouvelle entreprise</Button>
+          </>
+        }
       />
 
       <div className="mb-4 relative">

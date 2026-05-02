@@ -14,6 +14,10 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { ListChecks, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ACTION_STATUS_META, PRIORITY_META } from "@/data/rgpdReferential";
+import { ExportMenu } from "@/components/ExportMenu";
+import { exportActionsXLSX } from "@/lib/exports/excelExport";
+import { printTablePDF } from "@/lib/exports/pdfTable";
+import { fmtDate } from "@/lib/exports/exportHelpers";
 
 export default function Actions() {
   const { user } = useAuth();
@@ -53,7 +57,31 @@ export default function Actions() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <PageHeader title="Plan d'actions" description="Suivi des actions correctives" icon={ListChecks} />
+      <PageHeader
+        title="Plan d'actions"
+        description="Suivi des actions correctives"
+        icon={ListChecks}
+        actions={
+          <ExportMenu
+            disabled={actions.length === 0}
+            onPdf={() => {
+              const c = companies.find((x) => x.id === companyId);
+              printTablePDF({
+                title: "Plan d'actions RGPD",
+                subtitle: c?.name,
+                columns: ["Titre", "Description", "Priorité", "Statut", "Responsable", "Échéance"],
+                rows: actions.map((a) => [
+                  a.title, a.description,
+                  PRIORITY_META[a.priority as keyof typeof PRIORITY_META]?.label,
+                  ACTION_STATUS_META[a.status as keyof typeof ACTION_STATUS_META]?.label,
+                  a.responsible, fmtDate(a.due_date),
+                ]),
+              });
+            }}
+            onExcel={() => exportActionsXLSX(actions, companies.find((x) => x.id === companyId)?.name)}
+          />
+        }
+      />
 
       <Card className="mb-4 border-2"><CardContent className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 p-4">
         <Label>Entreprise :</Label>

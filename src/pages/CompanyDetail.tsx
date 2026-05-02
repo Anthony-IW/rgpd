@@ -9,6 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Building2, ArrowLeft, Edit, Plus, ClipboardCheck, FileText, ListChecks, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AUDIT_STATUS_META } from "@/data/rgpdReferential";
+import { ExportMenu } from "@/components/ExportMenu";
+import { exportCompanySheetXLSX } from "@/lib/exports/excelExport";
+import { printTablePDF } from "@/lib/exports/pdfTable";
+import { fmtDate } from "@/lib/exports/exportHelpers";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -56,6 +60,21 @@ export default function CompanyDetail() {
     navigate("/entreprises");
   };
 
+  const exportPdf = () => {
+    if (!company) return;
+    printTablePDF({
+      title: `Fiche entreprise - ${company.name}`,
+      subtitle: [company.sector, company.city].filter(Boolean).join(" · "),
+      columns: ["Audit", "Statut", "Score", "Début", "Fin"],
+      rows: audits.map((a) => [
+        a.title,
+        AUDIT_STATUS_META[a.status as keyof typeof AUDIT_STATUS_META]?.label,
+        a.global_score != null ? `${a.global_score}%` : "",
+        fmtDate(a.start_date), fmtDate(a.completed_at),
+      ]),
+    });
+  };
+
   if (!company) return null;
 
   return (
@@ -67,6 +86,7 @@ export default function CompanyDetail() {
         icon={Building2}
         actions={
           <>
+            <ExportMenu onPdf={exportPdf} onExcel={() => exportCompanySheetXLSX(company, audits, processing, actions)} />
             <Button variant="outline" onClick={() => navigate(`/entreprises/${id}/edit`)}><Edit className="mr-2 h-4 w-4" />Modifier</Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
