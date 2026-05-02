@@ -593,7 +593,13 @@ export type Database = {
     }
     Enums: {
       action_priority: "critique" | "haute" | "moyenne" | "basse"
-      action_status: "a_faire" | "en_cours" | "fait" | "reporte"
+      action_status:
+        | "a_faire"
+        | "en_cours"
+        | "fait"
+        | "reporte"
+        | "conforme"
+        | "non_applicable"
       app_role: "admin" | "auditor" | "client"
       audit_status: "draft" | "in_progress" | "completed" | "archived"
       compliance_level:
@@ -737,7 +743,14 @@ export const Constants = {
   public: {
     Enums: {
       action_priority: ["critique", "haute", "moyenne", "basse"],
-      action_status: ["a_faire", "en_cours", "fait", "reporte"],
+      action_status: [
+        "a_faire",
+        "en_cours",
+        "fait",
+        "reporte",
+        "conforme",
+        "non_applicable",
+      ],
       app_role: ["admin", "auditor", "client"],
       audit_status: ["draft", "in_progress", "completed", "archived"],
       compliance_level: [
