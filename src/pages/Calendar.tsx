@@ -48,11 +48,22 @@ export default function CalendarPage() {
 
   useEffect(() => {
     document.title = "Calendrier | RGPD";
-    supabase.from("companies").select("id, name").order("name").then(({ data }) => {
-      setCompanies(data || []);
-      if (data && data.length && !companyId) setCompanyId(data[0].id);
-    });
-  }, []);
+    (async () => {
+      if (isClient && !canEdit) {
+        // Client: charger uniquement ses entreprises
+        const { data: cu } = await supabase.from("company_users").select("company_id").eq("user_id", user!.id);
+        const ids = (cu || []).map((x) => x.company_id);
+        if (!ids.length) return;
+        const { data } = await supabase.from("companies").select("id, name").in("id", ids).order("name");
+        setCompanies(data || []);
+        if (data && data.length) setCompanyId(data[0].id);
+      } else {
+        const { data } = await supabase.from("companies").select("id, name").order("name");
+        setCompanies(data || []);
+        if (data && data.length) setCompanyId(data[0].id);
+      }
+    })();
+  }, [user, isClient, canEdit]);
 
   const reload = async () => {
     if (!companyId) { setActions([]); setEvents([]); return; }
