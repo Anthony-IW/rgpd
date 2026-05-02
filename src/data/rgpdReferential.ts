@@ -393,6 +393,8 @@ export const ACTION_STATUS_META = {
   a_faire: { label: "À faire", color: "muted" },
   en_cours: { label: "En cours", color: "info" },
   fait: { label: "Fait", color: "success" },
+  conforme: { label: "Conforme", color: "success" },
+  non_applicable: { label: "Non applicable", color: "muted" },
   reporte: { label: "Reporté", color: "warning" },
 } as const;
 
