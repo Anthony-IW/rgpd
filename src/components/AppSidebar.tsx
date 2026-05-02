@@ -4,7 +4,7 @@ import {
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 import {
-  LayoutDashboard, Building2, ClipboardCheck, FileText, ListChecks, BookOpen, LogOut, Shield, ClipboardList,
+  LayoutDashboard, Building2, ClipboardCheck, FileText, ListChecks, BookOpen, LogOut, Shield, ClipboardList, CalendarDays,
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,11 +16,13 @@ const auditorItems = [
   { title: "Audits RGPD", url: "/audits", icon: ClipboardCheck },
   { title: "Registre traitements", url: "/registre", icon: FileText },
   { title: "Plan d'actions", url: "/actions", icon: ListChecks },
+  { title: "Calendrier", url: "/calendrier", icon: CalendarDays },
   { title: "Bibliothèque", url: "/bibliotheque", icon: BookOpen },
 ];
 
 const clientItems = [
   { title: "Mon plan d'actions", url: "/portail/actions", icon: ClipboardList },
+  { title: "Calendrier", url: "/portail/calendrier", icon: CalendarDays },
 ];
 
 export function AppSidebar() {
