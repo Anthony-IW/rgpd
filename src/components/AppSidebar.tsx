@@ -4,13 +4,13 @@ import {
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
 } from "@/components/ui/sidebar";
 import {
-  LayoutDashboard, Building2, ClipboardCheck, FileText, ListChecks, BookOpen, LogOut, Shield,
+  LayoutDashboard, Building2, ClipboardCheck, FileText, ListChecks, BookOpen, LogOut, Shield, ClipboardList,
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "./ui/button";
 
-const items = [
+const auditorItems = [
   { title: "Tableau de bord", url: "/", icon: LayoutDashboard },
   { title: "Entreprises", url: "/entreprises", icon: Building2 },
   { title: "Audits RGPD", url: "/audits", icon: ClipboardCheck },
@@ -19,11 +19,16 @@ const items = [
   { title: "Bibliothèque", url: "/bibliotheque", icon: BookOpen },
 ];
 
+const clientItems = [
+  { title: "Mon plan d'actions", url: "/portail/actions", icon: ClipboardList },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
-  const { signOut, user } = useAuth();
+  const { signOut, user, isClient, isAuditor, isAdmin } = useAuth();
+  const items = isClient && !isAuditor && !isAdmin ? clientItems : auditorItems;
 
   const isActive = (url: string) => url === "/" ? pathname === "/" : pathname.startsWith(url);
 
