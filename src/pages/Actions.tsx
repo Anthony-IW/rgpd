@@ -55,16 +55,16 @@ export default function Actions() {
     <div className="mx-auto max-w-6xl">
       <PageHeader title="Plan d'actions" description="Suivi des actions correctives" icon={ListChecks} />
 
-      <Card className="mb-4 border-2"><CardContent className="flex flex-wrap items-center gap-3 p-4">
+      <Card className="mb-4 border-2"><CardContent className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 p-4">
         <Label>Entreprise :</Label>
         <Select value={companyId} onValueChange={setCompanyId}>
-          <SelectTrigger className="w-72"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-72"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
           <SelectContent>{companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
         </Select>
-        <div className="flex-1" />
+        <div className="hidden sm:block sm:flex-1" />
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button disabled={!companyId} className="bg-gradient-primary"><Plus className="mr-2 h-4 w-4" />Nouvelle action</Button></DialogTrigger>
-          <DialogContent>
+          <DialogTrigger asChild><Button disabled={!companyId} className="bg-gradient-primary w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" />Nouvelle action</Button></DialogTrigger>
+          <DialogContent className="w-[calc(100vw-2rem)] max-w-lg">
             <DialogHeader><DialogTitle>Nouvelle action</DialogTitle></DialogHeader>
             <div className="space-y-3 py-2">
               <div><Label>Titre *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
@@ -104,7 +104,7 @@ export default function Actions() {
                   </div>
                 </div>
                 <Select value={a.status} onValueChange={(v) => update(a.id, { status: v, completed_at: v === "fait" ? new Date().toISOString() : null })}>
-                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-36"><SelectValue /></SelectTrigger>
                   <SelectContent>{Object.entries(ACTION_STATUS_META).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent>
                 </Select>
                 <Button variant="ghost" size="icon" onClick={() => remove(a.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>

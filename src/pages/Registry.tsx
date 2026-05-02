@@ -82,16 +82,16 @@ export default function Registry() {
     <div className="mx-auto max-w-6xl">
       <PageHeader title="Registre des traitements" description="Article 30 du RGPD" icon={FileText} />
 
-      <Card className="mb-4 border-2"><CardContent className="flex flex-wrap items-center gap-3 p-4">
+      <Card className="mb-4 border-2"><CardContent className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 p-4">
         <Label className="shrink-0">Entreprise :</Label>
         <Select value={companyId} onValueChange={setCompanyId}>
-          <SelectTrigger className="w-72"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-72"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
           <SelectContent>{companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
         </Select>
-        <div className="flex-1" />
+        <div className="hidden sm:block sm:flex-1" />
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button disabled={!companyId} className="bg-gradient-primary"><Plus className="mr-2 h-4 w-4" />Nouveau traitement</Button></DialogTrigger>
-          <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+          <DialogTrigger asChild><Button disabled={!companyId} className="bg-gradient-primary w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" />Nouveau traitement</Button></DialogTrigger>
+          <DialogContent className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-3xl overflow-y-auto">
             <DialogHeader><DialogTitle>Nouveau traitement</DialogTitle></DialogHeader>
             <div className="grid gap-3 py-2 md:grid-cols-2">
               <div className="md:col-span-2"><Label>Nom *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>

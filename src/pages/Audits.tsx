@@ -56,7 +56,7 @@ export default function Audits() {
         actions={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild><Button className="bg-gradient-primary"><Plus className="mr-2 h-4 w-4" />Nouvel audit</Button></DialogTrigger>
-            <DialogContent>
+            <DialogContent className="w-[calc(100vw-2rem)] max-w-lg">
               <DialogHeader>
                 <DialogTitle>Démarrer un nouvel audit</DialogTitle>
                 <DialogDescription>Sélectionnez l'entreprise concernée</DialogDescription>

@@ -88,7 +88,7 @@ export default function CompanyDetail() {
         }
       />
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="border-2">
           <CardHeader><CardTitle className="text-base">Identification</CardTitle></CardHeader>
           <CardContent className="space-y-1.5 text-sm">
@@ -125,7 +125,7 @@ export default function CompanyDetail() {
         <Card className="mt-4 border-2"><CardHeader><CardTitle className="text-base">Notes</CardTitle></CardHeader><CardContent className="whitespace-pre-wrap text-sm">{company.notes}</CardContent></Card>
       )}
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-3">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="border-2">
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base"><ClipboardCheck className="h-4 w-4 text-primary" />Audits ({audits.length})</CardTitle>
