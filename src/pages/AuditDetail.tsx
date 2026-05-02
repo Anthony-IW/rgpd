@@ -1,0 +1,208 @@
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { PageHeader } from "@/components/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ArrowLeft, ClipboardCheck, FileDown, Save, Plus } from "lucide-react";
+import { toast } from "sonner";
+import {
+  RGPD_REFERENTIAL, COMPLIANCE_LEVELS, AUDIT_STATUS_META,
+  computeCategoryScore, computeGlobalScore, totalQuestions,
+} from "@/data/rgpdReferential";
+import { generateAuditPDF } from "@/lib/pdfReport";
+
+export default function AuditDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [audit, setAudit] = useState<any>(null);
+  const [company, setCompany] = useState<any>(null);
+  const [responses, setResponses] = useState<Record<string, any>>({});
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    document.title = "Audit | RGPD";
+    (async () => {
+      const { data: a } = await supabase.from("audits").select("*, companies(*)").eq("id", id).single();
+      setAudit(a); setCompany(a?.companies);
+      const { data: r } = await supabase.from("audit_responses").select("*").eq("audit_id", id);
+      const map: Record<string, any> = {};
+      (r || []).forEach((x) => (map[x.question_id] = x));
+      setResponses(map);
+    })();
+  }, [id]);
+
+  const globalScore = useMemo(() => computeGlobalScore(responses), [responses]);
+  const totalQ = totalQuestions();
+  const answeredCount = Object.values(responses).filter((r: any) => r.level && r.level !== "a_evaluer").length;
+
+  const updateResponse = async (q: any, category: string, patch: any) => {
+    const existing = responses[q.id];
+    const next = { ...(existing || { question_id: q.id, category, level: "a_evaluer" }), ...patch };
+    setResponses((s) => ({ ...s, [q.id]: next }));
+    const { error } = await supabase.from("audit_responses").upsert({
+      audit_id: id, question_id: q.id, category, level: next.level,
+      comment: next.comment ?? null, evidence: next.evidence ?? null, recommendation: next.recommendation ?? null,
+    }, { onConflict: "audit_id,question_id" });
+    if (error) toast.error(error.message);
+  };
+
+  const saveAudit = async (extra: any = {}) => {
+    setSaving(true);
+    const { error } = await supabase.from("audits").update({
+      global_score: globalScore,
+      executive_summary: audit.executive_summary,
+      recommendations: audit.recommendations,
+      ...extra,
+    }).eq("id", id);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Audit enregistré");
+  };
+
+  const setStatus = async (status: string) => {
+    setAudit({ ...audit, status });
+    const upd: any = { status };
+    if (status === "completed") upd.completed_at = new Date().toISOString();
+    upd.global_score = globalScore;
+    await supabase.from("audits").update(upd).eq("id", id);
+    toast.success("Statut mis à jour");
+  };
+
+  const createActionFromQuestion = async (q: any, category: string) => {
+    const r = responses[q.id];
+    const { error } = await supabase.from("action_plans").insert({
+      audit_id: id, company_id: company.id, owner_id: user!.id,
+      title: q.text.slice(0, 200),
+      description: r?.recommendation || "",
+      category, related_question_id: q.id,
+      priority: r?.level === "non_conforme" ? "haute" : "moyenne",
+      status: "a_faire",
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Action ajoutée au plan");
+  };
+
+  const exportPdf = async () => {
+    if (!audit || !company) return;
+    await generateAuditPDF({ audit, company, responses, globalScore });
+  };
+
+  if (!audit) return null;
+
+  return (
+    <div className="mx-auto max-w-6xl">
+      <Button variant="ghost" onClick={() => navigate("/audits")} className="mb-4"><ArrowLeft className="mr-2 h-4 w-4" />Audits</Button>
+      <PageHeader
+        title={audit.title}
+        description={`${company?.name} · ${answeredCount}/${totalQ} questions évaluées`}
+        icon={ClipboardCheck}
+        actions={
+          <>
+            <Button variant="outline" onClick={exportPdf}><FileDown className="mr-2 h-4 w-4" />Rapport PDF</Button>
+            <Button onClick={() => saveAudit()} disabled={saving} className="bg-gradient-primary"><Save className="mr-2 h-4 w-4" />Enregistrer</Button>
+          </>
+        }
+      />
+
+      <Card className="mb-6 border-2 bg-gradient-card">
+        <CardContent className="grid gap-4 p-5 md:grid-cols-3">
+          <div>
+            <p className="text-xs uppercase text-muted-foreground">Score global</p>
+            <p className="text-4xl font-bold text-phoenix">{globalScore}%</p>
+            <Progress value={globalScore} className="mt-2 h-2" />
+          </div>
+          <div>
+            <p className="text-xs uppercase text-muted-foreground">Avancement</p>
+            <p className="text-2xl font-semibold">{answeredCount}/{totalQ}</p>
+            <Progress value={(answeredCount / totalQ) * 100} className="mt-2 h-2" />
+          </div>
+          <div>
+            <p className="mb-2 text-xs uppercase text-muted-foreground">Statut</p>
+            <Select value={audit.status} onValueChange={setStatus}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Object.entries(AUDIT_STATUS_META).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Accordion type="multiple" className="space-y-3">
+        {RGPD_REFERENTIAL.map((cat) => {
+          const s = computeCategoryScore(cat, responses);
+          const pct = s.total === 0 ? 0 : Math.round((s.score / s.total) * 100);
+          return (
+            <AccordionItem key={cat.id} value={cat.id} className="rounded-xl border-2 bg-card px-4">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex w-full items-center gap-3 pr-2 text-left">
+                  <div className="flex-1">
+                    <div className="font-semibold">{cat.name}</div>
+                    <div className="text-xs text-muted-foreground">{cat.questions.length} questions · {s.answered} évaluées</div>
+                  </div>
+                  <div className="hidden w-32 sm:block">
+                    <Progress value={pct} className="h-1.5" />
+                  </div>
+                  <Badge variant="outline" className="font-bold">{pct}%</Badge>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-3 pt-2">
+                  {cat.questions.map((q) => {
+                    const r = responses[q.id] || { level: "a_evaluer" };
+                    return (
+                      <div key={q.id} className="rounded-lg border bg-background p-3">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div className="flex-1 min-w-[240px]">
+                            <p className="text-sm font-medium">{q.text}</p>
+                            {q.reference && <p className="mt-0.5 text-xs text-muted-foreground">{q.reference}{q.weight && q.weight > 1 ? ` · poids ${q.weight}` : ""}</p>}
+                          </div>
+                          <Select value={r.level} onValueChange={(v) => updateResponse(q, cat.id, { level: v })}>
+                            <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(COMPLIANCE_LEVELS).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {(r.level === "non_conforme" || r.level === "partiel" || r.comment || r.recommendation) && (
+                          <div className="mt-3 grid gap-2 md:grid-cols-2">
+                            <Textarea placeholder="Constat / commentaire" value={r.comment || ""} onChange={(e) => updateResponse(q, cat.id, { comment: e.target.value })} rows={2} className="text-xs" />
+                            <Textarea placeholder="Recommandation" value={r.recommendation || ""} onChange={(e) => updateResponse(q, cat.id, { recommendation: e.target.value })} rows={2} className="text-xs" />
+                            <Textarea placeholder="Preuves / éléments justificatifs" value={r.evidence || ""} onChange={(e) => updateResponse(q, cat.id, { evidence: e.target.value })} rows={2} className="text-xs md:col-span-2" />
+                          </div>
+                        )}
+                        {(r.level === "non_conforme" || r.level === "partiel") && (
+                          <Button size="sm" variant="outline" onClick={() => createActionFromQuestion(q, cat.id)} className="mt-2">
+                            <Plus className="mr-1 h-3 w-3" />Créer une action corrective
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
+      </Accordion>
+
+      <Card className="mt-6 border-2">
+        <CardHeader><CardTitle>Synthèse exécutive</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <Textarea placeholder="Synthèse pour la direction" value={audit.executive_summary || ""} onChange={(e) => setAudit({ ...audit, executive_summary: e.target.value })} rows={4} />
+          <Textarea placeholder="Recommandations globales" value={audit.recommendations || ""} onChange={(e) => setAudit({ ...audit, recommendations: e.target.value })} rows={4} />
+          <Button onClick={() => saveAudit()} disabled={saving} className="bg-gradient-primary"><Save className="mr-2 h-4 w-4" />Enregistrer la synthèse</Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
