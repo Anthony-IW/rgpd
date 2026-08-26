@@ -1,5 +1,6 @@
 import { escapeHtml } from "./exportHelpers";
-import { openPrintHtml } from "./pdfTable";
+import { downloadHtmlPdf } from "./pdfDownload";
+
 import { COMPLIANCE_LEVELS } from "@/data/rgpdReferential";
 
 export type QuestionnaireQuestion = {
@@ -102,8 +103,12 @@ export function printQuestionnairePDF(opts: {
         </div>`).join("")}
     `).join("")}
     <div class="footer">Questionnaire généré par la plateforme d'audit RGPD Informatique &amp; Web — ${new Date().toLocaleString("fr-FR")}</div>
-    <script>window.onload=()=>setTimeout(()=>window.print(),300);</script>
     </body></html>`;
 
-  openPrintHtml(html);
+  return downloadHtmlPdf({
+    html,
+    baseName: includeAnswers ? "questionnaire_rgpd" : "questionnaire_rgpd_vierge",
+    company: companyName,
+    orientation: "portrait",
+  });
 }

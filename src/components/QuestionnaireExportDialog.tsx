@@ -49,24 +49,27 @@ export function QuestionnaireExportDialog({
       return n;
     });
 
-  const handleExport = () => {
-    const categories = RGPD_REFERENTIAL.map((cat) => ({
+  const buildCategories = (onlySelected: boolean, withAnswers: boolean) =>
+    RGPD_REFERENTIAL.map((cat) => ({
       id: cat.id,
       name: cat.name,
       questions: cat.questions
-        .filter((q) => selected.has(q.id))
+        .filter((q) => (onlySelected ? selected.has(q.id) : true))
         .map((q) => ({
           id: q.id,
           text: q.text,
           reference: q.reference,
           help: QUESTION_HELP[q.id],
-          level: responses[q.id]?.level ?? null,
-          comment: responses[q.id]?.comment ?? null,
+          level: withAnswers ? responses[q.id]?.level ?? null : null,
+          comment: withAnswers ? responses[q.id]?.comment ?? null : null,
         })),
     })).filter((c) => c.questions.length > 0);
 
+  const handleExport = () => {
+    const categories = buildCategories(true, includeAnswers);
     if (categories.length === 0) return toast.error("Sélectionnez au moins une question");
 
+    toast.info("Génération du PDF en cours…");
     printQuestionnairePDF({
       title: "Questionnaire d'audit RGPD",
       companyName,
@@ -80,6 +83,23 @@ export function QuestionnaireExportDialog({
     });
     setOpen(false);
   };
+
+  const handleBlankExport = () => {
+    toast.info("Génération du questionnaire vierge…");
+    printQuestionnairePDF({
+      title: "Questionnaire d'audit RGPD (vierge)",
+      companyName,
+      auditTitle,
+      categories: buildCategories(selected.size > 0 && selected.size < allIds.length, false),
+      includeHelp,
+      includeAnswers: false,
+      commentLines: Math.max(commentLines, 3),
+      intro:
+        "Questionnaire vierge : cochez pour chaque point l'état de conformité (À faire, Conforme, Partiel, Non conforme, Non applicable) et complétez la zone de commentaire sous chaque question.",
+    });
+    setOpen(false);
+  };
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -164,10 +184,13 @@ export function QuestionnaireExportDialog({
           </Accordion>
         </ScrollArea>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col gap-2 sm:flex-row">
           <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
+          <Button variant="outline" onClick={handleBlankExport}>
+            <FileDown className="mr-2 h-4 w-4" />Questionnaire vierge
+          </Button>
           <Button className="bg-gradient-primary" onClick={handleExport}>
-            <FileDown className="mr-2 h-4 w-4" />Générer le PDF
+            <FileDown className="mr-2 h-4 w-4" />Télécharger le PDF
           </Button>
         </DialogFooter>
       </DialogContent>

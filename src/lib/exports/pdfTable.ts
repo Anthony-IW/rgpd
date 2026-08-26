@@ -1,4 +1,6 @@
 import { escapeHtml } from "./exportHelpers";
+import { downloadHtmlPdf } from "./pdfDownload";
+
 
 const STYLE = `
   body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#222;margin:24px;}
@@ -47,7 +49,6 @@ export function printTablePDF(opts: {
       </tbody>
     </table>
     <div class="footer">Rapport généré par la plateforme d'audit RGPD Informatique &amp; Web</div>
-    <script>window.onload=()=>setTimeout(()=>window.print(),300);</script>
     </body></html>`;
-  openPrintHtml(html);
+  return downloadHtmlPdf({ html, baseName: title, company: subtitle, orientation: "landscape" });
 }
