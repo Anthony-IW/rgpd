@@ -1,4 +1,4 @@
-import { jsPDF } from "jspdf";
+import { jsPDF, AcroFormCheckBox, AcroFormTextField } from "jspdf";
 import { fileName } from "./exportHelpers";
 import { COMPLIANCE_LEVELS } from "@/data/rgpdReferential";
 
