@@ -32,11 +32,15 @@ export function printQuestionnairePDF(opts: {
   includeAnswers?: boolean;
   commentLines?: number;
   intro?: string;
+  /** Génère un PDF avec champs de formulaire (cases à cocher + zones de texte) */
+  fillable?: boolean;
 }) {
   const {
     title, companyName, auditTitle, categories,
     includeHelp = true, includeAnswers = false, commentLines = 3, intro,
+    fillable = false,
   } = opts;
+  let fieldIndex = 0;
 
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
   const PW = doc.internal.pageSize.getWidth();
