@@ -125,10 +125,26 @@ export default function AuditDetail() {
         actions={
           <>
             <ExportMenu label="Rapport" onPdf={exportPdf} onExcel={exportExcel} />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Supprimer cet audit ?</AlertDialogTitle>
+                  <AlertDialogDescription>Cette action est irréversible. Toutes les réponses de cet audit seront supprimées.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={deleteAudit} className="bg-destructive">Supprimer</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button onClick={() => saveAudit()} disabled={saving} className="bg-gradient-primary"><Save className="mr-2 h-4 w-4" />Enregistrer</Button>
           </>
         }
       />
+
 
       <Card className="mb-6 border-2 bg-gradient-card">
         <CardContent className="grid gap-4 p-5 md:grid-cols-3">
