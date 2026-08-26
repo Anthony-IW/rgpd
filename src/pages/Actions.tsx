@@ -40,7 +40,14 @@ export default function Actions() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>({ title: "", description: "", priority: "moyenne", status: "a_faire", responsible: "", due_date: "" });
 
-  useEffect(() => { document.title = "Plan d'actions | RGPD"; supabase.from("companies").select("id, name").order("name").then(({ data }) => setCompanies(data || [])); }, []);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [planOpen, setPlanOpen] = useState(false);
+  const [plan, setPlan] = useState<{ start: string; days: string; chain: boolean }>({
+    start: toISODate(new Date()), days: "5", chain: true,
+  });
+
+  useEffect(() => { document.title = "Plan d'actions | RGPD"; supabase.from("companies").select("id, name, closed_weekdays, closed_dates").order("name").then(({ data }) => setCompanies(data || [])); }, []);
+
 
   useEffect(() => {
     if (!companyId) { setAudits([]); setAuditId(""); return; }
