@@ -18,6 +18,7 @@ const empty = {
   contact_name: "", contact_email: "", contact_phone: "", contact_role: "",
   has_dpo: false, dpo_name: "", dpo_email: "", dpo_phone: "", dpo_external: false,
   has_representative: false, representative_name: "", notes: "",
+  closed_weekdays: [0, 6] as number[], closed_dates: [] as string[],
 };
 
 export default function CompanyForm() {
