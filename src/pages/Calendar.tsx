@@ -97,18 +97,31 @@ export default function CalendarPage() {
 
   const items: CalItem[] = useMemo(() => {
     const byId = new Map(allActions.map((x) => [x.id, x]));
-    const a: CalItem[] = actions.map((x) => ({
-      id: `a-${x.id}`, source: "action", title: x.title, date: parseISO(x.due_date),
-      color: statusColor(x) ?? "#3B82F6",
-      description: x.description, status: x.status, raw: x,
-    }));
+    // Un repère « Fin : … » remplace la ligne d'action du même jour (pas de doublon)
+    const endEventByAction = new Map<string, any>();
+    events.forEach((x) => {
+      if (x.related_action_id && /^fin\s*:/i.test(x.title || "")) endEventByAction.set(x.related_action_id, x);
+    });
+    const a: CalItem[] = actions
+      .filter((x) => {
+        const ev = endEventByAction.get(x.id);
+        return !(ev && isSameDay(parseISO(ev.start_at), parseISO(x.due_date)));
+      })
+      .map((x) => ({
+        id: `a-${x.id}`, source: "action", title: x.title, date: parseISO(x.due_date),
+        color: statusColor(x) ?? "#3B82F6",
+        description: x.description, status: x.status, raw: x,
+      }));
     const e: CalItem[] = events.map((x) => ({
       id: `e-${x.id}`, source: "event", title: x.title, date: parseISO(x.start_at),
       color: statusColor(byId.get(x.related_action_id)) ?? x.color ?? "#3B82F6",
-      description: x.description, location: x.location, raw: x,
+      description: x.description, location: x.location,
+      relatedActionId: /^fin\s*:/i.test(x.title || "") ? x.related_action_id ?? undefined : undefined,
+      raw: x,
     }));
     return [...a, ...e].sort((x, y) => x.date.getTime() - y.date.getTime());
   }, [actions, events, allActions]);
+
 
   const company = useMemo(() => companies.find((c) => c.id === companyId), [companies, companyId]);
   const closure = useMemo(() => ({
