@@ -184,6 +184,9 @@ export function printQuestionnairePDF(opts: {
         doc.setDrawColor(90, 90, 90);
         doc.setLineWidth(0.3);
         if (fillable) {
+          doc.setDrawColor(90, 90, 90);
+          doc.setLineWidth(0.3);
+          doc.rect(bx, cy - 3.2, 3.6, 3.6, "S");
           const cb = new AcroFormCheckBox() as any;
           cb.fieldName = `q${fieldIndex}_${l}`;
           cb.Rect = [bx, cy - 3.2, 3.6, 3.6];
