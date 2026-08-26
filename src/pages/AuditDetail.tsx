@@ -115,6 +115,14 @@ export default function AuditDetail() {
 
   if (!audit) return null;
 
+  async function deleteAudit() {
+    const { error } = await supabase.from("audits").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Audit supprimé");
+    navigate("/audits");
+  }
+
+
   return (
     <div className="mx-auto max-w-6xl">
       <Button variant="ghost" onClick={() => navigate("/audits")} className="mb-4"><ArrowLeft className="mr-2 h-4 w-4" />Audits</Button>
