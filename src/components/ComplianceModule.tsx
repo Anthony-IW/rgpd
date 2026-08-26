@@ -255,12 +255,12 @@ export function ComplianceModule({
     const value = form[f.key];
     const set = (v: any) => setForm((s) => ({ ...s, [f.key]: v }));
     if (f.type === "textarea") {
-      return <Textarea value={value || ""} onChange={(e) => set(e.target.value)} placeholder={f.placeholder} rows={f.rows || 3} />;
+      return <Textarea id={f.key} value={value || ""} onChange={(e) => set(e.target.value)} placeholder={f.placeholder} rows={f.rows || 3} />;
     }
     if (f.type === "select" || f.type === "status") {
       return (
         <Select value={value || ""} onValueChange={set}>
-          <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+          <SelectTrigger id={f.key}><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
           <SelectContent>{f.options?.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
         </Select>
       );
@@ -269,7 +269,7 @@ export function ComplianceModule({
       const opts = relationOptions[f.key] || [];
       return (
         <Select value={value || ""} onValueChange={set}>
-          <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+          <SelectTrigger id={f.key}><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
           <SelectContent>
             <SelectItem value="">Aucun</SelectItem>
             {opts.map((o: any) => <SelectItem key={o.id || o[f.relation!.valueField || "id"]} value={o[f.relation!.valueField || "id"]}>{o[f.relation!.labelField]}</SelectItem>)}
@@ -278,21 +278,21 @@ export function ComplianceModule({
       );
     }
     if (f.type === "boolean") {
-      return <Switch checked={!!value} onCheckedChange={set} />;
+      return <Switch id={f.key} checked={!!value} onCheckedChange={set} />;
     }
     if (f.type === "date") {
-      return <Input type="date" value={value || ""} onChange={(e) => set(e.target.value)} />;
+      return <Input id={f.key} type="date" value={value || ""} onChange={(e) => set(e.target.value)} />;
     }
     if (f.type === "datetime") {
-      return <Input type="datetime-local" value={value || ""} onChange={(e) => set(e.target.value)} />;
+      return <Input id={f.key} type="datetime-local" value={value || ""} onChange={(e) => set(e.target.value)} />;
     }
     if (f.type === "number") {
-      return <Input type="number" value={value ?? ""} onChange={(e) => set(e.target.value)} />;
+      return <Input id={f.key} type="number" value={value ?? ""} onChange={(e) => set(e.target.value)} />;
     }
     if (f.type === "array") {
-      return <Input value={Array.isArray(value) ? value.join(", ") : value || ""} onChange={(e) => set(e.target.value)} placeholder={f.placeholder || "Séparés par des virgules"} />;
+      return <Input id={f.key} value={Array.isArray(value) ? value.join(", ") : value || ""} onChange={(e) => set(e.target.value)} placeholder={f.placeholder || "Séparés par des virgules"} />;
     }
-    return <Input value={value || ""} onChange={(e) => set(e.target.value)} placeholder={f.placeholder} />;
+    return <Input id={f.key} value={value || ""} onChange={(e) => set(e.target.value)} placeholder={f.placeholder} />;
   };
 
   const renderListValue = (item: any, key: string) => {
