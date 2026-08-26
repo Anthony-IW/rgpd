@@ -345,7 +345,10 @@ export default function CalendarPage() {
               );
             })}
           </div>
+            </>
+          )}
         </CardContent>
+
       </Card>
 
       {selectedDay && (
