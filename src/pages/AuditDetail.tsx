@@ -99,17 +99,36 @@ export default function AuditDetail() {
   const createActionFromQuestion = async (q: any, category: string) => {
     if (actionQids.has(q.id)) return toast.error("Une action corrective existe déjà pour cette question");
     const r = responses[q.id];
-    const { error } = await supabase.from("action_plans").insert({
+    const { data, error } = await supabase.from("action_plans").insert({
       audit_id: id, company_id: company.id, owner_id: user!.id,
       title: q.text.slice(0, 200),
       description: r?.recommendation || "",
       category, related_question_id: q.id,
       priority: r?.level === "non_conforme" ? "haute" : "moyenne",
       status: "a_faire",
-    });
+    }).select("id").single();
     if (error) return toast.error(error.code === "23505" ? "Une action corrective existe déjà pour cette question" : error.message);
     setActionQids((s) => new Set(s).add(q.id));
+    setActionMap((m) => ({ ...m, [q.id]: data.id }));
     toast.success("Action ajoutée au plan");
+  };
+
+  const deleteActionFromQuestion = async (qid: string) => {
+    const actionId = actionMap[qid];
+    if (!actionId) return;
+    const { error } = await supabase.from("action_plans").delete().eq("id", actionId);
+    if (error) return toast.error(error.message);
+    setActionQids((s) => {
+      const next = new Set(s);
+      next.delete(qid);
+      return next;
+    });
+    setActionMap((m) => {
+      const next = { ...m };
+      delete next[qid];
+      return next;
+    });
+    toast.success("Action corrective supprimée");
   };
 
   const exportPdf = async () => {
