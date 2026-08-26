@@ -24,6 +24,8 @@ export default function ClientActions() {
   const { user } = useAuth();
   const [companies, setCompanies] = useState<any[]>([]);
   const [companyId, setCompanyId] = useState("");
+  const [audits, setAudits] = useState<any[]>([]);
+  const [auditId, setAuditId] = useState("");
   const [actions, setActions] = useState<any[]>([]);
   const [pendingDialog, setPendingDialog] = useState<{ action: any; status: string } | null>(null);
   const [comment, setComment] = useState("");
@@ -37,12 +39,22 @@ export default function ClientActions() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (!companyId) { setAudits([]); setAuditId(""); return; }
+    supabase.from("audits").select("id, title, start_date").eq("company_id", companyId).order("created_at", { ascending: false }).then(({ data }) => {
+      const list = data || [];
+      setAudits(list);
+      const stillValid = list.some((a: any) => a.id === auditId);
+      if (!stillValid) setAuditId(list[0]?.id || "");
+    });
+  }, [companyId]);
+
   const load = async () => {
-    if (!companyId) return setActions([]);
-    const { data } = await supabase.from("action_plans").select("*").eq("company_id", companyId).order("due_date", { ascending: true, nullsFirst: false });
+    if (!companyId || !auditId) return setActions([]);
+    const { data } = await supabase.from("action_plans").select("*").eq("company_id", companyId).eq("audit_id", auditId).order("due_date", { ascending: true, nullsFirst: false });
     setActions(data || []);
   };
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [companyId]);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [companyId, auditId]);
 
   const onChangeStatus = async (action: any, newStatus: string) => {
     if (NEEDS_VALIDATION.includes(newStatus)) {
@@ -73,6 +85,8 @@ export default function ClientActions() {
   };
 
   const company = companies.find((c) => c.id === companyId);
+  const audit = audits.find((a) => a.id === auditId);
+  const exportSubtitle = [company?.name, audit?.title].filter(Boolean).join(" · ");
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -85,7 +99,7 @@ export default function ClientActions() {
             disabled={actions.length === 0}
             onPdf={() => printTablePDF({
               title: "Plan d'actions RGPD",
-              subtitle: company?.name,
+              subtitle: exportSubtitle,
               columns: ["Titre", "Description", "Priorité", "Statut", "Échéance"],
               rows: actions.map((a) => [
                 a.title, a.description,
@@ -94,22 +108,33 @@ export default function ClientActions() {
                 fmtDate(a.due_date),
               ]),
             })}
-            onExcel={() => exportActionsXLSX(actions, company?.name)}
+            onExcel={() => exportActionsXLSX(actions, exportSubtitle)}
           />
         }
       />
 
-      {companies.length > 1 && (
-        <Card className="mb-4 border-2"><CardContent className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center">
-          <Label>Entreprise :</Label>
-          <Select value={companyId} onValueChange={setCompanyId}>
-            <SelectTrigger className="w-full sm:w-72"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
-            <SelectContent>{companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+      <Card className="mb-4 border-2"><CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center">
+        {companies.length > 1 && (
+          <div className="flex flex-col gap-1.5 w-full sm:w-auto sm:flex-1 min-w-[240px]">
+            <Label>Entreprise :</Label>
+            <Select value={companyId} onValueChange={setCompanyId}>
+              <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+              <SelectContent>{companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+        )}
+        <div className="flex flex-col gap-1.5 w-full sm:w-auto sm:flex-1 min-w-[240px]">
+          <Label>Audit :</Label>
+          <Select value={auditId} onValueChange={setAuditId} disabled={!companyId || audits.length === 0}>
+            <SelectTrigger><SelectValue placeholder={companyId ? (audits.length ? "Sélectionner..." : "Aucun audit") : "Choisir une entreprise"} /></SelectTrigger>
+            <SelectContent>{audits.map((a) => <SelectItem key={a.id} value={a.id}>{a.title}</SelectItem>)}</SelectContent>
           </Select>
-        </CardContent></Card>
-      )}
+        </div>
+      </CardContent></Card>
 
       {!companyId ? <p className="text-center text-muted-foreground">Aucune entreprise rattachée à votre compte.</p> :
+        audits.length === 0 ? <p className="text-center text-muted-foreground py-8">Aucun audit pour cette entreprise.</p> :
+        !auditId ? <p className="text-center text-muted-foreground py-8">Sélectionnez un audit.</p> :
         actions.length === 0 ? <p className="text-center text-muted-foreground py-8">Aucune action.</p> :
         <div className="space-y-2">
           {actions.map((a) => (
