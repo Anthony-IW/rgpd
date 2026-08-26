@@ -240,6 +240,52 @@ export default function Actions() {
         </Dialog>
       </CardContent></Card>
 
+      {actions.length > 0 && (
+        <Card className="mb-4 border-2 border-dashed">
+          <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={selected.length === actions.length && actions.length > 0}
+                onCheckedChange={(v) => setSelected(v ? actions.map((a) => a.id) : [])}
+              />
+              Tout sélectionner
+            </label>
+            <span className="text-sm text-muted-foreground">{selected.length} action(s) sélectionnée(s)</span>
+            <div className="sm:ml-auto">
+              <Button disabled={selected.length === 0} onClick={() => openPlanner(selected)} className="w-full bg-gradient-primary sm:w-auto">
+                <CalendarPlus className="mr-2 h-4 w-4" />Planifier dans le calendrier
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Dialog open={planOpen} onOpenChange={setPlanOpen}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-lg">
+          <DialogHeader><DialogTitle>Planifier {selected.length} action(s)</DialogTitle></DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><Label>Date de début</Label><Input type="date" value={plan.start} onChange={(e) => setPlan({ ...plan, start: e.target.value })} /></div>
+              <div><Label>Jours ouvrés par action</Label><Input type="number" min={1} value={plan.days} onChange={(e) => setPlan({ ...plan, days: e.target.value })} /></div>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox checked={plan.chain} onCheckedChange={(v) => setPlan({ ...plan, chain: !!v })} />
+              Enchaîner les actions (la suivante démarre après la précédente)
+            </label>
+            <p className="rounded-md bg-muted/50 p-2 text-xs text-muted-foreground">
+              Seuls les jours d'ouverture de l'entreprise sont comptés (jours de fermeture définis dans la fiche entreprise).
+              Deux repères sont créés dans le calendrier : « Début : … » et « Fin : … ».
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPlanOpen(false)}>Annuler</Button>
+            <Button onClick={schedule} className="bg-gradient-primary">Planifier</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
+
       {!companyId ? <p className="text-center text-muted-foreground">Sélectionnez une entreprise.</p> :
         audits.length === 0 ? <p className="text-center text-muted-foreground py-8">Aucun audit pour cette entreprise.</p> :
         !auditId ? <p className="text-center text-muted-foreground py-8">Sélectionnez un audit.</p> :
