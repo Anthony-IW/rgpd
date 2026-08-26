@@ -295,9 +295,13 @@ export default function Actions() {
             <Card key={a.id} className="border-2">
               <CardContent className="space-y-3 p-4">
                 <div className="flex flex-wrap items-start gap-3">
+                  <Checkbox className="mt-1" checked={selected.includes(a.id)} onCheckedChange={() => toggleSelect(a.id)} aria-label="Sélectionner l'action" />
                   <div className="flex-1 min-w-[240px]">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium">{a.title}</span>
+                      <Button size="sm" variant="ghost" className="h-6 px-1.5 text-xs" onClick={() => openPlanner([a.id])} title="Planifier cette action">
+                        <CalendarPlus className="h-3.5 w-3.5" />
+                      </Button>
                       <Badge variant="outline">{PRIORITY_META[a.priority as keyof typeof PRIORITY_META]?.label}</Badge>
                       {a.pending_status && (
                         <Badge className="bg-warning text-warning-foreground"><Hourglass className="mr-1 h-3 w-3" />Validation demandée : {ACTION_STATUS_META[a.pending_status as keyof typeof ACTION_STATUS_META]?.label}</Badge>
