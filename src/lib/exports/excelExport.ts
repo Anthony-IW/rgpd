@@ -9,7 +9,7 @@ import {
   computeCategoryScore,
   computeGlobalScore,
 } from "@/data/rgpdReferential";
-import { fileName, fmtDate, fmtBool, joinList } from "./exportHelpers";
+import { fileName, fmtDate, fmtBool, joinList, slug } from "./exportHelpers";
 
 function autoWidths(rows: any[][]): { wch: number }[] {
   if (!rows.length) return [];
