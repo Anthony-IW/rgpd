@@ -10,12 +10,14 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowLeft, ClipboardCheck, FileDown, Save, Plus } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ArrowLeft, ClipboardCheck, FileDown, Save, Plus, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   RGPD_REFERENTIAL, COMPLIANCE_LEVELS, AUDIT_STATUS_META,
   computeCategoryScore, computeGlobalScore, totalQuestions,
 } from "@/data/rgpdReferential";
+import { QUESTION_HELP } from "@/data/rgpdHelp";
 import { generateAuditPDF } from "@/lib/pdfReport";
 import { ExportMenu } from "@/components/ExportMenu";
 import { exportAuditXLSX } from "@/lib/exports/excelExport";
@@ -174,9 +176,30 @@ export default function AuditDetail() {
                       <div key={q.id} className="rounded-lg border bg-background p-3">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="flex-1 min-w-[240px]">
-                            <p className="text-sm font-medium">{q.text}</p>
+                            <div className="flex items-start gap-1.5">
+                              <p className="text-sm font-medium">{q.text}</p>
+                              {(q.help || QUESTION_HELP[q.id]) && (
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button
+                                      type="button"
+                                      aria-label="Aide sur cette question"
+                                      className="mt-0.5 shrink-0 rounded-full text-muted-foreground transition-smooth hover:text-primary"
+                                    >
+                                      <HelpCircle className="h-4 w-4" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent align="start" className="w-[min(22rem,calc(100vw-2rem))] text-xs leading-relaxed">
+                                    <p className="mb-1 font-semibold text-primary">Ce qui est attendu</p>
+                                    <p className="text-muted-foreground">{q.help || QUESTION_HELP[q.id]}</p>
+                                    {q.reference && <p className="mt-2 text-[11px] text-muted-foreground/80">Référence : {q.reference}</p>}
+                                  </PopoverContent>
+                                </Popover>
+                              )}
+                            </div>
                             {q.reference && <p className="mt-0.5 text-xs text-muted-foreground">{q.reference}{q.weight && q.weight > 1 ? ` · poids ${q.weight}` : ""}</p>}
                           </div>
+
                           <Select value={r.level} onValueChange={(v) => updateResponse(q, cat.id, { level: v })}>
                             <SelectTrigger className="w-full sm:w-52"><SelectValue /></SelectTrigger>
                             <SelectContent>
