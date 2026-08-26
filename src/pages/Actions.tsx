@@ -15,7 +15,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ListChecks, Plus, Trash2, Hourglass, Check, X } from "lucide-react";
+import { ListChecks, Plus, Trash2, Hourglass, Check, X, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 import { ACTION_STATUS_META, PRIORITY_META } from "@/data/rgpdReferential";
 import { ExportMenu } from "@/components/ExportMenu";
@@ -23,6 +23,9 @@ import { exportActionsXLSX } from "@/lib/exports/excelExport";
 import { printTablePDF } from "@/lib/exports/pdfTable";
 import { fmtDate } from "@/lib/exports/exportHelpers";
 import { ActionAttachments } from "@/components/ActionAttachments";
+import { Checkbox } from "@/components/ui/checkbox";
+import { addWorkingDays, nextOpenDay, toISODate } from "@/lib/workingDays";
+import { addDays, format } from "date-fns";
 
 export default function Actions() {
   const { user } = useAuth();
