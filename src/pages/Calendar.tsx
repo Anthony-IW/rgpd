@@ -13,11 +13,12 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { CalendarDays, Plus, ChevronLeft, ChevronRight, Trash2, ListChecks, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import {
-  addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth,
-  isToday, parseISO, startOfMonth, startOfWeek, subMonths,
+  addDays, addMonths, addWeeks, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth,
+  isToday, parseISO, startOfMonth, startOfWeek, subMonths, subWeeks,
 } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type CalItem = {
   id: string;
