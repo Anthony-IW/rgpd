@@ -299,6 +299,11 @@ export function ComplianceModule({
       if (b) return <Badge className={b.className}>{b.label}</Badge>;
     }
     if (field?.format) return field.format(v, item);
+    if (field?.type === "relation" && v && relationOptions[key]) {
+      const rel = field.relation!;
+      const opt = relationOptions[key].find((o: any) => (o[rel.valueField || "id"] || o.id) === v);
+      if (opt) return opt[rel.labelField];
+    }
     if (Array.isArray(v)) return v.join(", ");
     if (typeof v === "boolean") return v ? "Oui" : "Non";
     return v ?? "—";
