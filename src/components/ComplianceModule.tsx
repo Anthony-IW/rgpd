@@ -92,8 +92,8 @@ export function ComplianceModule({
 
   useEffect(() => {
     document.title = `${title} | RGPD`;
-    supabase.from("companies" as any).select("id, name").order("name").then(({ data }) => {
-      const list = data || [];
+    (supabase.from("companies" as any).select("id, name").order("name") as any).then((res: any) => {
+      const list = res.data || [];
       setCompanies(list);
       if (list.length === 1) setCompanyId(list[0].id);
     });
@@ -102,10 +102,10 @@ export function ComplianceModule({
   useEffect(() => {
     if (!companyId) { setItems([]); return; }
     setLoading(true);
-    supabase.from(table as any).select("*").eq("company_id", companyId).order("created_at", { ascending: false }).then(({ data, error }) => {
+    (supabase.from(table as any).select("*").eq("company_id", companyId).order("created_at", { ascending: false }) as any).then((res: any) => {
       setLoading(false);
-      if (error) toast.error(error.message);
-      else setItems(data || []);
+      if (res.error) toast.error(res.error.message);
+      else setItems(res.data || []);
     });
   }, [companyId, table]);
 
@@ -114,10 +114,10 @@ export function ComplianceModule({
     const relFields = fields.filter((f) => f.type === "relation" && f.relation);
     Promise.all(relFields.map(async (f) => {
       const rel = f.relation!;
-      let query = supabase.from(rel.table as any).select(`${rel.valueField || "id"}, ${rel.labelField}`);
-      if (rel.filterByCompany) query = (query as any).eq("company_id", companyId);
-      const { data } = await query;
-      return { key: f.key, options: data || [] };
+      const query = supabase.from(rel.table as any).select(`${rel.valueField || "id"}, ${rel.labelField}`);
+      if (rel.filterByCompany) (query as any).eq("company_id", companyId);
+      const res: any = await query;
+      return { key: f.key, options: res.data || [] };
     })).then((results) => {
       const map: Record<string, any[]> = {};
       results.forEach((r) => (map[r.key] = r.options));
