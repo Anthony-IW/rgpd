@@ -22,6 +22,7 @@ const auditorItems = [
 
 const clientItems = [
   { title: "Mon plan d'actions", url: "/portail/actions", icon: ClipboardList },
+  { title: "Mon questionnaire", url: "/portail/questionnaire", icon: ClipboardCheck },
   { title: "Calendrier", url: "/portail/calendrier", icon: CalendarDays },
 ];
 

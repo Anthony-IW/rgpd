@@ -43,6 +43,7 @@ const App = () => (
               <Route path="/bibliotheque" element={<Library />} />
               <Route path="/calendrier" element={<CalendarPage />} />
               <Route path="/portail/actions" element={<ClientActions />} />
+              <Route path="/portail/questionnaire" element={<ClientAudit />} />
               <Route path="/portail/calendrier" element={<CalendarPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
