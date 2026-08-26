@@ -93,10 +93,27 @@ export default function CalendarPage() {
   }, [actions, events]);
 
   const monthStart = startOfMonth(cursor);
-  const days = eachDayOfInterval({
-    start: startOfWeek(monthStart, { weekStartsOn: 1 }),
-    end: endOfWeek(endOfMonth(cursor), { weekStartsOn: 1 }),
-  });
+  const days = useMemo(() => {
+    if (view === "day") return [cursor];
+    if (view === "week") {
+      return eachDayOfInterval({
+        start: startOfWeek(cursor, { weekStartsOn: 1 }),
+        end: endOfWeek(cursor, { weekStartsOn: 1 }),
+      });
+    }
+    return eachDayOfInterval({
+      start: startOfWeek(monthStart, { weekStartsOn: 1 }),
+      end: endOfWeek(endOfMonth(cursor), { weekStartsOn: 1 }),
+    });
+  }, [cursor, view]);
+
+  const goPrev = () => setCursor(view === "month" ? subMonths(cursor, 1) : view === "week" ? subWeeks(cursor, 1) : addDays(cursor, -1));
+  const goNext = () => setCursor(view === "month" ? addMonths(cursor, 1) : view === "week" ? addWeeks(cursor, 1) : addDays(cursor, 1));
+  const periodLabel = view === "month"
+    ? format(cursor, "MMMM yyyy", { locale: fr })
+    : view === "week"
+      ? `Semaine du ${format(startOfWeek(cursor, { weekStartsOn: 1 }), "d MMM", { locale: fr })} au ${format(endOfWeek(cursor, { weekStartsOn: 1 }), "d MMM yyyy", { locale: fr })}`
+      : format(cursor, "EEEE d MMMM yyyy", { locale: fr });
 
   const itemsFor = (d: Date) => items.filter((it) => isSameDay(it.date, d));
   const dayItems = selectedDay ? itemsFor(selectedDay) : [];
