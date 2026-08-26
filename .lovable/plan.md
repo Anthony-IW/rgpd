@@ -1,76 +1,139 @@
-# Ajout des exports PDF et Excel
+# Idées de fonctionnalités à ajouter
 
-Actuellement, seul le rapport d'audit possède un export PDF (`src/lib/pdfReport.ts`). On va étendre les capacités d'export à toutes les sections clés de l'application, en PDF **et** en Excel (.xlsx).
+L'application couvre déjà une large partie du cycle d'audit RGPD : entreprises, audits multi-domaines, registre des traitements, plan d'actions, portail client, calendrier, exports PDF/Excel et notifications d'échéance.
 
-## Ce qui sera exportable
+Voici des fonctionnalités complémentaires classées par valeur métier et effort, pour rendre l'outil encore plus complet et professionnel.
 
-| Module | PDF | Excel |
-|---|---|---|
-| Rapport d'audit complet (par entreprise) | ✅ amélioré | ✅ nouveau |
-| Liste des entreprises | ✅ | ✅ |
-| Registre des traitements (Art. 30) | ✅ | ✅ |
-| Plan d'actions / remédiation | ✅ | ✅ |
-| Fiche entreprise (synthèse) | ✅ | ✅ |
-| Bibliothèque documentaire (liste) | ✅ | ✅ |
+## 1. Gestion des demandes d'exercice des droits (DRO)
 
-## Détails par export
+**Valeur :** obligation légale (Art. 12-22 RGPD), traçabilité indispensable.
 
-### 1. Rapport d'audit (PDF amélioré)
-Refonte de `src/lib/pdfReport.ts` :
-- Page de garde avec logo Informatique & Web, nom entreprise, date, auditeur
-- Sommaire
-- Synthèse exécutive (score global, score par domaine, jauge visuelle)
-- Détail des réponses par domaine (question, réponse, constat, recommandation, criticité)
-- Plan d'actions associé
-- Pied de page avec pagination
+- Table `data_subject_requests` : type (accès, rectification, effacement, portabilité, opposition, limitation), date de réception, date de réponse, canal, statut, pièces jointes.
+- Page `/droits` avec filtres (en retard, type, statut).
+- Rappels automatiques J-7 avant échéance légale (1 mois).
+- Export PDF/Excel du registre.
 
-### 2. Rapport d'audit (Excel)
-Classeur multi-onglets :
-- `Synthèse` : scores par domaine + score global
-- `Réponses` : toutes les questions/réponses/constats
-- `Plan d'actions` : actions liées à l'audit
-- `Registre` : traitements de l'entreprise
+## 2. Registre des violations de données (data breaches)
 
-### 3. Listes (Entreprises, Registre, Actions)
-- **PDF** : tableau paysage avec en-tête, logo, filtres appliqués mentionnés
-- **Excel** : tableau brut avec filtres Excel activés, en-têtes en gras, largeurs auto
+**Valeur :** obligation CNIL (Art. 33-34), délai critique de 72h.
 
-## Implémentation technique
+- Table `data_breaches` : date de découverte, nature, catégories de données, personnes concernées, risque, notification CNIL, notification personnes, mesures prises.
+- Page `/violations` avec alerte si délai de 72h approche.
+- Lien automatique avec le plan d'actions (création d'une action corrective).
 
-### Librairies à ajouter
-- `jspdf` + `jspdf-autotable` (déjà utilisé pour le rapport actuel — réutilisé)
-- `xlsx` (SheetJS) pour la génération Excel — léger, fonctionne 100% côté navigateur
+## 3. Sous-traitants et contrats Art. 28 (DPA)
 
-### Architecture
-Création d'un module utilitaire `src/lib/exports/` :
-- `pdfReport.ts` (refonte de l'existant) — rapport audit complet
-- `pdfTable.ts` — helper générique pour exporter une liste en PDF
-- `excelExport.ts` — helper générique + exports spécifiques (audit, registre, actions, entreprises)
-- `exportHelpers.ts` — formatage commun (dates, scores, criticité)
+**Valeur :** un des points de contrôle majeurs de l'audit.
 
-### UI : boutons d'export
-Ajout d'un composant `ExportMenu` (dropdown avec "Exporter en PDF" / "Exporter en Excel") placé dans :
-- `PageHeader` (prop optionnelle `actions`) — déjà supporté
-- Pages : `Companies`, `Registry`, `Actions`, `CompanyDetail`, `AuditDetail`, `Library`
+- Table `subcontractors` : nom, contact, pays, garanties (CCT/BCR/adéquation), date de signature DPA, date de renouvellement, documents joints.
+- Table de liaison `company_subcontractors`.
+- Page `/sous-traitants` par entreprise.
+- Rappel 3 mois avant échéance du DPA.
 
-Sur les listes filtrées (Registre, Actions), l'export reflète les **filtres actifs** (recherche, statut, priorité).
+## 4. Registre des consentements et preuves
 
-### Nommage des fichiers
-Format : `{type}_{entreprise}_{YYYY-MM-DD}.{ext}`
-Exemples :
-- `audit_acme_2026-05-02.pdf`
-- `registre_traitements_acme_2026-05-02.xlsx`
-- `plan_actions_2026-05-02.xlsx`
+**Valeur :** démontrer le consentement valide (Art. 7).
 
-### Branding
-Tous les PDF reprennent :
-- Le logo Informatique & Web en en-tête
-- Les couleurs de la charte (violet/bleu/orange)
-- Mention "Audit RGPD réalisé par Informatique & Web" en pied de page
+- Table `consents` : finalité, version du formulaire, date, preuve (IP, hash, capture), statut (donné / retiré).
+- Page `/consentements` avec recherche et filtre.
+- Export pour preuve en cas de contrôle.
 
-## Fichiers impactés
-- **Créés** : `src/lib/exports/excelExport.ts`, `src/lib/exports/pdfTable.ts`, `src/lib/exports/exportHelpers.ts`, `src/components/ExportMenu.tsx`
-- **Modifiés** : `src/lib/pdfReport.ts` (déplacé dans `src/lib/exports/` et amélioré), `src/pages/Companies.tsx`, `src/pages/Registry.tsx`, `src/pages/Actions.tsx`, `src/pages/CompanyDetail.tsx`, `src/pages/AuditDetail.tsx`, `src/pages/Library.tsx`
-- **Dépendances** : ajout de `xlsx`
+## 5. Analyse d'impact (PIA / DPIA)
 
-Aucune modification de la base de données requise.
+**Valeur :** obligatoire pour les traitements à haut risque (Art. 35).
+
+- Table `dpia` liée à un traitement ou un audit.
+- Formulaire basé sur le modèle CNIL : nécessité, proportionnalité, mesures, risques résiduels.
+- Score de risque et génération d'un rapport PDF.
+
+## 6. Gestion documentaire avancée
+
+**Valeur :** centraliser les modèles et documents clients.
+
+- Upload de documents propres à chaque entreprise (politique de confidentialité, DPA, etc.).
+- Versionnage (table `document_versions`).
+- Partage de documents avec le portail client.
+- Modèles dynamiques : fusion de variables (`{{entreprise.nom}}`, `{{dpo.email}}`) pour générer un document Word/PDF pré-rempli.
+
+## 7. Centre de notifications in-app
+
+**Valeur :** remplacer les alertes mail par une zone centralisée.
+
+- Table `notifications` : type (échéance, validation client, nouvelle action), lu/non lu, lien.
+- Icône cloche dans l'en-tête avec badge de non lus.
+- Marquage "lu" et archivage.
+
+## 8. Multi-auditeurs et collaboration
+
+**Valeur :** permettre à plusieurs auditeurs de travailler sur le même audit.
+
+- Table `audit_assignees` (many-to-many).
+- Mention / commentaires sur les questions (`audit_comments`).
+- Historique des modifications (qui a répondu quand).
+
+## 9. Import de données par Excel/CSV
+
+**Valeur :** gagner du temps à l'entrée en relation.
+
+- Import d'entreprises, de traitements ou de contacts via fichier modèle.
+- Vérification des doublons (SIRET, email).
+- Rapport d'import avec lignes en erreur.
+
+## 10. Snapshots et comparaison d'audits
+
+**Valeur :** montrer l'évolution de la conformité dans le temps.
+
+- Sauvegarde d'un "snapshot" à la clôture d'un audit.
+- Page de comparaison entre deux audits : gains/pertes par domaine, actions restantes.
+- Graphiques d'évolution dans le tableau de bord.
+
+## 11. Personnalisation du scoring
+
+**Valeur :** adapter l'audit au contexte de l'entreprise.
+
+- Pondération des questions par audit.
+- Questions optionnelles / masquées selon le secteur ou la taille.
+- Seuils de conformité configurables.
+
+## 12. Tags et recherche globale
+
+**Valeur :** navigation plus rapide dans des volumes importants.
+
+- Tags sur entreprises, traitements, actions.
+- Barre de recherche globale (`Cmd+K`) pour accéder rapidement à une entreprise, un audit, une action.
+
+## 13. Tableau de bord client enrichi
+
+**Valeur :** meilleure expérience client et moins de sollicitations.
+
+- Vue synthétique du score global, des actions en retard, des documents partagés et du calendrier.
+- Possibilité pour le client de consulter l'historique des validations/refus.
+
+## 14. Collecte de preuves par question d'audit
+
+**Valeur :** justifier chaque réponse et faciliter la relecture.
+
+- Upload de fichiers sur chaque question d'audit (captures, politiques, extraits de registre).
+- Stockage dans un bucket dédié `audit-evidences`.
+- Affichage des preuves dans le rapport PDF.
+
+## 15. Formations et sensibilisation
+
+**Valeur :** la sensibilisation est une mesure de sécurité (Art. 32) et un axe d'audit.
+
+- Table `trainings` : thème, date, participants, preuves (attestations).
+- Rappel annuel de renouvellement.
+
+## Comment choisir
+
+| Si tu veux renforcer... | Commence par... |
+|---|---|
+| La conformité légale au quotidien | DRO + Violations + Sous-traitants |
+| La qualité des livrables | Documents dynamiques + Preuves par question |
+| L'efficacité de l'équipe d'audit | Multi-auditeurs + Import + Recherche globale |
+| L'expérience client | Dashboard client + Notifications + DPIA |
+| Le piloting sur le long terme | Snapshots + Scoring personnalisé |
+
+## Prochaine étape
+
+Indique-moi les 2 ou 3 fonctionnalités que tu veux implémenter en priorité, dans l'ordre. Je rédigerai alors un plan d'implémentation détaillé pour chacune.
