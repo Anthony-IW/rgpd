@@ -125,6 +125,7 @@ export function printQuestionnairePDF(opts: {
     y += 5;
 
     for (const q of cat.questions) {
+      fieldIndex += 1;
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9.5);
       const qLines = doc.splitTextToSize(q.text, W - 8);
