@@ -65,46 +65,23 @@ export default function Auth() {
             <CardDescription>Connectez-vous pour piloter vos audits</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Connexion</TabsTrigger>
-                <TabsTrigger value="signup">Créer un compte</TabsTrigger>
-              </TabsList>
-              <TabsContent value="signin" className="space-y-3 pt-4">
-                <form onSubmit={handleSignIn} className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="email-in">Email</Label>
-                    <Input id="email-in" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="pwd-in">Mot de passe</Label>
-                    <Input id="pwd-in" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                  </div>
-                  <Button type="submit" className="w-full bg-gradient-primary" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Se connecter
-                  </Button>
-                </form>
-              </TabsContent>
-              <TabsContent value="signup" className="space-y-3 pt-4">
-                <form onSubmit={handleSignUp} className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="name-up">Nom complet</Label>
-                    <Input id="name-up" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="email-up">Email</Label>
-                    <Input id="email-up" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="pwd-up">Mot de passe (min 8)</Label>
-                    <Input id="pwd-up" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                  </div>
-                  <Button type="submit" className="w-full bg-gradient-primary" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Créer mon compte
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+            <form onSubmit={handleSignIn} className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="email-in">Email</Label>
+                <Input id="email-in" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="pwd-in">Mot de passe</Label>
+                <Input id="pwd-in" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              </div>
+              <Button type="submit" className="w-full bg-gradient-primary" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Se connecter
+              </Button>
+            </form>
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              Les comptes sont créés uniquement par l'administrateur. Contactez-le pour obtenir vos accès.
+            </p>
+
 
             <div className="my-4 flex items-center gap-3">
               <div className="h-px flex-1 bg-border" />
