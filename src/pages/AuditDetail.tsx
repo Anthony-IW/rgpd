@@ -25,6 +25,7 @@ import { QUESTION_HELP } from "@/data/rgpdHelp";
 import { generateAuditPDF } from "@/lib/pdfReport";
 import { ExportMenu } from "@/components/ExportMenu";
 import { exportAuditXLSX } from "@/lib/exports/excelExport";
+import { QuestionnaireExportDialog } from "@/components/QuestionnaireExportDialog";
 
 export default function AuditDetail() {
   const { id } = useParams();
@@ -164,6 +165,7 @@ export default function AuditDetail() {
         icon={ClipboardCheck}
         actions={
           <>
+            <QuestionnaireExportDialog auditTitle={audit.title} companyName={company?.name} responses={responses} />
             <ExportMenu label="Rapport" onPdf={exportPdf} onExcel={exportExcel} />
             <AlertDialog>
               <AlertDialogTrigger asChild>
