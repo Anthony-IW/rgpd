@@ -35,6 +35,7 @@ export default function AuditDetail() {
   const [responses, setResponses] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
   const [actionQids, setActionQids] = useState<Set<string>>(new Set());
+  const [actionMap, setActionMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!id) return;
@@ -46,8 +47,15 @@ export default function AuditDetail() {
       const map: Record<string, any> = {};
       (r || []).forEach((x) => (map[x.question_id] = x));
       setResponses(map);
-      const { data: acts } = await supabase.from("action_plans").select("related_question_id").eq("audit_id", id).not("related_question_id", "is", null);
-      setActionQids(new Set((acts || []).map((x: any) => x.related_question_id)));
+      const { data: acts } = await supabase.from("action_plans").select("id,related_question_id").eq("audit_id", id).not("related_question_id", "is", null);
+      const qids = new Set<string>();
+      const amap: Record<string, string> = {};
+      (acts || []).forEach((x: any) => {
+        qids.add(x.related_question_id);
+        amap[x.related_question_id] = x.id;
+      });
+      setActionQids(qids);
+      setActionMap(amap);
     })();
   }, [id]);
 
