@@ -348,12 +348,16 @@ export default function CalendarPage() {
                       </div>
                       {it.description && <p className="mt-1 text-xs text-muted-foreground">{it.description}</p>}
                       {it.location && <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />{it.location}</p>}
-                      {canEdit && it.source === "action" && (
+                      {canEdit && (it.source === "action" || it.relatedActionId) && (
                         <div className="mt-2 flex items-center gap-2">
                           <Label className="text-xs">Modifier l'échéance :</Label>
                           <Input type="date" className="h-7 w-40 text-xs"
                             defaultValue={format(it.date, "yyyy-MM-dd")}
-                            onChange={(e) => e.target.value && updateActionDueDate(it.raw.id, e.target.value)}
+                            onChange={(e) => {
+                              if (!e.target.value) return;
+                              if (it.source === "action") updateActionDueDate(it.raw.id, e.target.value);
+                              else updateEndMarker(it.raw, it.relatedActionId!, e.target.value);
+                            }}
                           />
                         </div>
                       )}
