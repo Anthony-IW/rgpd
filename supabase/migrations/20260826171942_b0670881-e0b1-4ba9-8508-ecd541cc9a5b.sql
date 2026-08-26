@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS action_plans_audit_question_unique ON public.action_plans (audit_id, related_question_id) WHERE audit_id IS NOT NULL AND related_question_id IS NOT NULL;
