@@ -1,139 +1,175 @@
-# Idées de fonctionnalités à ajouter
+# Roadmap complète : fonctionnalités RGPD avancées
 
-L'application couvre déjà une large partie du cycle d'audit RGPD : entreprises, audits multi-domaines, registre des traitements, plan d'actions, portail client, calendrier, exports PDF/Excel et notifications d'échéance.
+L'application couvre déjà le cœur du cycle d'audit. Le plan ci-dessous ajoute les 15 modules complémentaires proposés, découpés en 4 phases pour rester livrable et testable.
 
-Voici des fonctionnalités complémentaires classées par valeur métier et effort, pour rendre l'outil encore plus complet et professionnel.
+On commence par la Phase 1 ; les phases suivantes feront l'objet de plans détaillés au moment de les démarrer.
 
-## 1. Gestion des demandes d'exercice des droits (DRO)
+## Phase 1 — Conformité légale (prioritaire)
 
-**Valeur :** obligation légale (Art. 12-22 RGPD), traçabilité indispensable.
+Objectif : donner à l'auditeur les registres obligatoires demandés par la CNIL.
 
-- Table `data_subject_requests` : type (accès, rectification, effacement, portabilité, opposition, limitation), date de réception, date de réponse, canal, statut, pièces jointes.
-- Page `/droits` avec filtres (en retard, type, statut).
-- Rappels automatiques J-7 avant échéance légale (1 mois).
-- Export PDF/Excel du registre.
+### 1.1 Demandes d'exercice des droits (DRO)
 
-## 2. Registre des violations de données (data breaches)
+- Table `data_subject_requests` : type, date_reception, date_response_due, status, channel, requester_email, notes, attachments.
+- Page `/droits` : liste, filtres, badge "en retard".
+- Rappels J-7 avant échéance légale (1 mois).
+- Export PDF/Excel.
 
-**Valeur :** obligation CNIL (Art. 33-34), délai critique de 72h.
+### 1.2 Registre des violations de données
 
-- Table `data_breaches` : date de découverte, nature, catégories de données, personnes concernées, risque, notification CNIL, notification personnes, mesures prises.
-- Page `/violations` avec alerte si délai de 72h approche.
-- Lien automatique avec le plan d'actions (création d'une action corrective).
+- Table `data_breaches` : discovery_date, notification_due_date, severity, data_categories, affected_count, notified_cnil, notified_subjects, measures, related_action_id.
+- Page `/violations` avec alerte si délai CNIL de 72h proche.
+- Bouton "Créer une action corrective" depuis une violation.
 
-## 3. Sous-traitants et contrats Art. 28 (DPA)
+### 1.3 Sous-traitants et DPA (Art. 28)
 
-**Valeur :** un des points de contrôle majeurs de l'audit.
-
-- Table `subcontractors` : nom, contact, pays, garanties (CCT/BCR/adéquation), date de signature DPA, date de renouvellement, documents joints.
-- Table de liaison `company_subcontractors`.
+- Table `subcontractors` : name, contact, country, dpa_signed_at, dpa_renewal_date, safeguards, documents.
+- Table `company_subcontractors` pour lier une entreprise à ses sous-traitants.
 - Page `/sous-traitants` par entreprise.
-- Rappel 3 mois avant échéance du DPA.
+- Rappel 3 mois avant renouvellement du DPA.
 
-## 4. Registre des consentements et preuves
+### 1.4 Consentements et preuves
 
-**Valeur :** démontrer le consentement valide (Art. 7).
-
-- Table `consents` : finalité, version du formulaire, date, preuve (IP, hash, capture), statut (donné / retiré).
+- Table `consents` : purpose, form_version, given_at, withdrawn_at, proof (IP/hash), status.
 - Page `/consentements` avec recherche et filtre.
 - Export pour preuve en cas de contrôle.
 
-## 5. Analyse d'impact (PIA / DPIA)
+### 1.5 Analyse d'impact (DPIA)
 
-**Valeur :** obligatoire pour les traitements à haut risque (Art. 35).
-
-- Table `dpia` liée à un traitement ou un audit.
+- Table `dpia` liée à un `processing_record` ou un `audit`.
 - Formulaire basé sur le modèle CNIL : nécessité, proportionnalité, mesures, risques résiduels.
-- Score de risque et génération d'un rapport PDF.
+- Score de risque et rapport PDF.
 
-## 6. Gestion documentaire avancée
+## Phase 2 — Productivité de l'équipe d'audit
 
-**Valeur :** centraliser les modèles et documents clients.
+Objectif : accélérer la saisie, le suivi et la relecture.
 
-- Upload de documents propres à chaque entreprise (politique de confidentialité, DPA, etc.).
-- Versionnage (table `document_versions`).
-- Partage de documents avec le portail client.
-- Modèles dynamiques : fusion de variables (`{{entreprise.nom}}`, `{{dpo.email}}`) pour générer un document Word/PDF pré-rempli.
-
-## 7. Centre de notifications in-app
-
-**Valeur :** remplacer les alertes mail par une zone centralisée.
-
-- Table `notifications` : type (échéance, validation client, nouvelle action), lu/non lu, lien.
-- Icône cloche dans l'en-tête avec badge de non lus.
-- Marquage "lu" et archivage.
-
-## 8. Multi-auditeurs et collaboration
-
-**Valeur :** permettre à plusieurs auditeurs de travailler sur le même audit.
+### 2.1 Multi-auditeurs
 
 - Table `audit_assignees` (many-to-many).
-- Mention / commentaires sur les questions (`audit_comments`).
-- Historique des modifications (qui a répondu quand).
+- Affichage des assignés sur la fiche audit.
+- RLS adaptée pour permettre la lecture/écriture aux assignés.
 
-## 9. Import de données par Excel/CSV
+### 2.2 Commentaires sur les questions
 
-**Valeur :** gagner du temps à l'entrée en relation.
+- Table `audit_comments` : question_id, audit_id, user_id, content, created_at.
+- Fil de discussion sous chaque question dans `AuditDetail`.
 
-- Import d'entreprises, de traitements ou de contacts via fichier modèle.
-- Vérification des doublons (SIRET, email).
-- Rapport d'import avec lignes en erreur.
+### 2.3 Import Excel/CSV
 
-## 10. Snapshots et comparaison d'audits
+- Page `/import` avec téléchargement de modèles.
+- Import d'entreprises, de traitements et de contacts.
+- Détection des doublons (SIRET, email) et rapport d'erreurs.
 
-**Valeur :** montrer l'évolution de la conformité dans le temps.
+### 2.4 Tags et recherche globale
 
-- Sauvegarde d'un "snapshot" à la clôture d'un audit.
-- Page de comparaison entre deux audits : gains/pertes par domaine, actions restantes.
-- Graphiques d'évolution dans le tableau de bord.
+- Colonne `tags` (text[]) sur `companies`, `processing_records`, `action_plans`.
+- Composant `CommandDialog` (`Cmd+K`) pour rechercher entreprises, audits, actions, traitements.
 
-## 11. Personnalisation du scoring
+### 2.5 Snapshots et comparaison d'audits
 
-**Valeur :** adapter l'audit au contexte de l'entreprise.
+- Table `audit_snapshots` : audit_id, snapshot_data (JSONB), created_at.
+- Snapshot automatique à la clôture d'un audit.
+- Page `/comparaisons` : sélection de deux audits, évolution par domaine.
 
-- Pondération des questions par audit.
-- Questions optionnelles / masquées selon le secteur ou la taille.
-- Seuils de conformité configurables.
+### 2.6 Scoring personnalisé
 
-## 12. Tags et recherche globale
+- Table `audit_question_weights` : audit_id, question_id, weight, enabled.
+- Interface dans `AuditDetail` pour désactiver une question ou changer sa pondération.
 
-**Valeur :** navigation plus rapide dans des volumes importants.
+## Phase 3 — Livrables et preuves
 
-- Tags sur entreprises, traitements, actions.
-- Barre de recherche globale (`Cmd+K`) pour accéder rapidement à une entreprise, un audit, une action.
+Objectif : produire des documents professionnels et traçables.
 
-## 13. Tableau de bord client enrichi
+### 3.1 Collecte de preuves par question
 
-**Valeur :** meilleure expérience client et moins de sollicitations.
+- Bucket `audit-evidences`.
+- Table `audit_evidence_files` : response_id, file_path, file_name.
+- Upload sur chaque question d'audit ; affichage dans le rapport PDF.
 
-- Vue synthétique du score global, des actions en retard, des documents partagés et du calendrier.
-- Possibilité pour le client de consulter l'historique des validations/refus.
+### 3.2 Documents dynamiques
 
-## 14. Collecte de preuves par question d'audit
+- Moteur de fusion de variables (`{{entreprise.nom}}`, `{{dpo.email}}`, `{{date}}`) dans les modèles.
+- Génération Word/PDF depuis la bibliothèque.
+- Page `/documents/generer`.
 
-**Valeur :** justifier chaque réponse et faciliter la relecture.
+### 3.3 Gestion documentaire avancée
 
-- Upload de fichiers sur chaque question d'audit (captures, politiques, extraits de registre).
-- Stockage dans un bucket dédié `audit-evidences`.
-- Affichage des preuves dans le rapport PDF.
+- Upload de documents propres à une entreprise.
+- Table `document_versions` pour le versionnage.
+- Partage de documents avec le portail client.
 
-## 15. Formations et sensibilisation
+### 3.4 Formations et sensibilisation
 
-**Valeur :** la sensibilisation est une mesure de sécurité (Art. 32) et un axe d'audit.
-
-- Table `trainings` : thème, date, participants, preuves (attestations).
+- Table `trainings` : theme, date, attendees, certificates.
+- Page `/formations`.
 - Rappel annuel de renouvellement.
 
-## Comment choisir
+## Phase 4 — Expérience client
 
-| Si tu veux renforcer... | Commence par... |
-|---|---|
-| La conformité légale au quotidien | DRO + Violations + Sous-traitants |
-| La qualité des livrables | Documents dynamiques + Preuves par question |
-| L'efficacité de l'équipe d'audit | Multi-auditeurs + Import + Recherche globale |
-| L'expérience client | Dashboard client + Notifications + DPIA |
-| Le piloting sur le long terme | Snapshots + Scoring personnalisé |
+Objectif : donner au client une vue claire et autonome.
 
-## Prochaine étape
+### 4.1 Tableau de bord client
 
-Indique-moi les 2 ou 3 fonctionnalités que tu veux implémenter en priorité, dans l'ordre. Je rédigerai alors un plan d'implémentation détaillé pour chacune.
+- Vue `/portail` avec score global, actions en retard, documents partagés, prochaines échéances.
+- Historique des validations/refus.
+
+### 4.2 Centre de notifications in-app
+
+- Table `notifications` : type, title, link, read_at.
+- Icône cloche dans l'en-tête avec badge de non lus.
+- Génération lors d'une échéance, d'une demande client ou d'un document partagé.
+
+### 4.3 Calendrier partagé enrichi
+
+- Affichage des événements et échéances côté client.
+- Possibilité pour le client de proposer une nouvelle date d'échéance (soumise à validation auditeur).
+
+## Découpage technique commun
+
+### Base de données
+
+- Une migration par module (table + GRANT + RLS + trigger `updated_at`).
+- Règles d'accès : auditeur/admin propriétaire, client en lecture sur ses propres données.
+- Index sur les clés étrangères et dates d'échéance.
+
+### Stockage
+
+- Nouveaux buckets privés : `audit-evidences`, `company-documents`, `dpia-documents`.
+- RLS sur `storage.objects` pour restreindre l'accès au propriétaire/auditeur/client concerné.
+
+### Edge Functions
+
+- Extension de `send-deadline-reminders` pour les DRO, violations et renouvellements DPA.
+- Fonction `generate-dynamic-document` pour la fusion de documents.
+
+### Exports
+
+- Extension de `src/lib/exports/` pour chaque nouveau module.
+- Rapports PDF avec logo Informatique & Web, sommaire et pagination.
+- Fichiers Excel multi-onglets pour DRO, violations, sous-traitants, consentements, DPIA.
+
+### Interface
+
+- Ajout d'entrées dans `AppSidebar` pour les nouveaux modules.
+- Composants réutilisables : `DataTable`, `DeadlineBadge`, `FileUploader`, `CommentThread`.
+- Responsive mobile pour chaque nouvelle page.
+
+## Fichiers impactés (prévision)
+
+- Créés : pages dans `src/pages/`, tables dans `supabase/migrations/`, utilitaires dans `src/lib/exports/`, composants dans `src/components/`.
+- Modifiés : `src/App.tsx`, `src/components/AppSidebar.tsx`, `src/pages/AuditDetail.tsx`, `src/pages/CompanyDetail.tsx`, `src/pages/Dashboard.tsx`, `src/lib/exports/*`.
+
+## Première livraison
+
+On démarre la Phase 1 avec les 5 modules de conformité légale.
+
+Ordre d'implémentation recommandé :
+
+1. Sous-traitants et DPA
+2. Demandes d'exercice des droits
+3. Registre des violations
+4. Consentements
+5. DPIA
+
+Chaque module comprend : migration SQL, page(s) React, export PDF/Excel, rappels d'échéance le cas échéant, et tests de parcours.
