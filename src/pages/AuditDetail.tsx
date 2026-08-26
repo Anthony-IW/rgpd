@@ -10,12 +10,14 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowLeft, ClipboardCheck, FileDown, Save, Plus } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ArrowLeft, ClipboardCheck, FileDown, Save, Plus, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import {
   RGPD_REFERENTIAL, COMPLIANCE_LEVELS, AUDIT_STATUS_META,
   computeCategoryScore, computeGlobalScore, totalQuestions,
 } from "@/data/rgpdReferential";
+import { QUESTION_HELP } from "@/data/rgpdHelp";
 import { generateAuditPDF } from "@/lib/pdfReport";
 import { ExportMenu } from "@/components/ExportMenu";
 import { exportAuditXLSX } from "@/lib/exports/excelExport";
