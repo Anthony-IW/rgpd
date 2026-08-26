@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ArrowLeft, ClipboardCheck, FileDown, Save, Plus, HelpCircle, Trash2, Check } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, FileDown, Save, Plus, HelpCircle, Trash2 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -35,6 +35,7 @@ export default function AuditDetail() {
   const [responses, setResponses] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
   const [actionQids, setActionQids] = useState<Set<string>>(new Set());
+  const [actionMap, setActionMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!id) return;
@@ -46,8 +47,15 @@ export default function AuditDetail() {
       const map: Record<string, any> = {};
       (r || []).forEach((x) => (map[x.question_id] = x));
       setResponses(map);
-      const { data: acts } = await supabase.from("action_plans").select("related_question_id").eq("audit_id", id).not("related_question_id", "is", null);
-      setActionQids(new Set((acts || []).map((x: any) => x.related_question_id)));
+      const { data: acts } = await supabase.from("action_plans").select("id,related_question_id").eq("audit_id", id).not("related_question_id", "is", null);
+      const qids = new Set<string>();
+      const amap: Record<string, string> = {};
+      (acts || []).forEach((x: any) => {
+        qids.add(x.related_question_id);
+        amap[x.related_question_id] = x.id;
+      });
+      setActionQids(qids);
+      setActionMap(amap);
     })();
   }, [id]);
 
@@ -91,17 +99,36 @@ export default function AuditDetail() {
   const createActionFromQuestion = async (q: any, category: string) => {
     if (actionQids.has(q.id)) return toast.error("Une action corrective existe déjà pour cette question");
     const r = responses[q.id];
-    const { error } = await supabase.from("action_plans").insert({
+    const { data, error } = await supabase.from("action_plans").insert({
       audit_id: id, company_id: company.id, owner_id: user!.id,
       title: q.text.slice(0, 200),
       description: r?.recommendation || "",
       category, related_question_id: q.id,
       priority: r?.level === "non_conforme" ? "haute" : "moyenne",
       status: "a_faire",
-    });
+    }).select("id").single();
     if (error) return toast.error(error.code === "23505" ? "Une action corrective existe déjà pour cette question" : error.message);
     setActionQids((s) => new Set(s).add(q.id));
+    setActionMap((m) => ({ ...m, [q.id]: data.id }));
     toast.success("Action ajoutée au plan");
+  };
+
+  const deleteActionFromQuestion = async (qid: string) => {
+    const actionId = actionMap[qid];
+    if (!actionId) return;
+    const { error } = await supabase.from("action_plans").delete().eq("id", actionId);
+    if (error) return toast.error(error.message);
+    setActionQids((s) => {
+      const next = new Set(s);
+      next.delete(qid);
+      return next;
+    });
+    setActionMap((m) => {
+      const next = { ...m };
+      delete next[qid];
+      return next;
+    });
+    toast.success("Action corrective supprimée");
   };
 
   const exportPdf = async () => {
@@ -249,8 +276,8 @@ export default function AuditDetail() {
                         )}
                         {(r.level === "non_conforme" || r.level === "partiel") && (
                           actionQids.has(q.id) ? (
-                            <Button size="sm" variant="ghost" disabled className="mt-2 text-muted-foreground">
-                              <Check className="mr-1 h-3 w-3" />Action corrective déjà créée
+                            <Button size="sm" variant="outline" onClick={() => deleteActionFromQuestion(q.id)} className="mt-2 text-destructive hover:bg-destructive/10 border-destructive/30">
+                              <Trash2 className="mr-1 h-3 w-3" />Supprimer l'action corrective
                             </Button>
                           ) : (
                             <Button size="sm" variant="outline" onClick={() => createActionFromQuestion(q, cat.id)} className="mt-2">
