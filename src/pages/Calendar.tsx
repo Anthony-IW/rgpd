@@ -230,29 +230,32 @@ export default function CalendarPage() {
                   onClick={() => { setSelectedDay(day); }}
                   onDoubleClick={() => openCreate(day)}
                   className={cn(
-                    "group relative min-h-[84px] sm:min-h-[110px] border-b border-r p-1.5 text-left transition-colors hover:bg-accent/40",
-                    !inMonth && "bg-muted/20 text-muted-foreground/60",
+                    "group relative border-b border-r p-1.5 text-left transition-colors hover:bg-accent/40",
+                    view === "month" && "min-h-[84px] sm:min-h-[110px]",
+                    view === "week" && "min-h-[140px] sm:min-h-[220px]",
+                    view === "day" && "min-h-[320px]",
+                    view === "month" && !inMonth && "bg-muted/20 text-muted-foreground/60",
                     selectedDay && isSameDay(day, selectedDay) && "ring-2 ring-primary ring-inset",
                   )}
                 >
                   <div className="flex items-center justify-between">
                     <span className={cn(
-                      "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium",
+                      "inline-flex h-6 items-center justify-center rounded-full px-2 text-xs font-medium",
                       today && "bg-primary text-primary-foreground",
-                    )}>{format(day, "d")}</span>
+                    )}>{view === "day" ? format(day, "EEEE d MMMM", { locale: fr }) : format(day, "d")}</span>
                     {dayList.length > 0 && (
                       <span className="text-[10px] text-muted-foreground">{dayList.length}</span>
                     )}
                   </div>
                   <div className="mt-1 space-y-0.5">
-                    {dayList.slice(0, 3).map((it) => (
+                    {(view === "month" ? dayList.slice(0, 3) : dayList).map((it) => (
                       <div key={it.id}
                         className="truncate rounded px-1 py-0.5 text-[10px] sm:text-xs font-medium text-white"
                         style={{ backgroundColor: it.color }}
                         title={it.title}
                       >{it.title}</div>
                     ))}
-                    {dayList.length > 3 && (
+                    {view === "month" && dayList.length > 3 && (
                       <div className="text-[10px] text-muted-foreground">+{dayList.length - 3}</div>
                     )}
                   </div>
