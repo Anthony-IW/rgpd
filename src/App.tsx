@@ -16,6 +16,7 @@ import Registry from "./pages/Registry";
 import Actions from "./pages/Actions";
 import Library from "./pages/Library";
 import ClientActions from "./pages/ClientActions";
+import ClientAudit from "./pages/ClientAudit";
 import CalendarPage from "./pages/Calendar";
 import { AuthProvider } from "./hooks/useAuth";
 
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/bibliotheque" element={<Library />} />
               <Route path="/calendrier" element={<CalendarPage />} />
               <Route path="/portail/actions" element={<ClientActions />} />
+              <Route path="/portail/questionnaire" element={<ClientAudit />} />
               <Route path="/portail/calendrier" element={<CalendarPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
