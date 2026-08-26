@@ -193,28 +193,33 @@ export default function CalendarPage() {
 
       <Card className="border-2 overflow-hidden">
         <CardContent className="p-0">
-          <div className="flex items-center justify-between border-b p-3">
-            <Button variant="ghost" size="icon" onClick={() => setCursor(subMonths(cursor, 1))}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <h2 className="text-base sm:text-lg font-semibold capitalize">
-              {format(cursor, "MMMM yyyy", { locale: fr })}
-            </h2>
-            <div className="flex items-center gap-1">
+          <div className="flex flex-col gap-2 border-b p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center justify-between gap-1 sm:justify-start">
+              <Button variant="ghost" size="icon" onClick={goPrev}><ChevronLeft className="h-4 w-4" /></Button>
+              <h2 className="text-sm sm:text-lg font-semibold capitalize">{periodLabel}</h2>
+              <Button variant="ghost" size="icon" onClick={goNext}><ChevronRight className="h-4 w-4" /></Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Tabs value={view} onValueChange={(v) => setView(v as any)}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="month" className="text-xs">Mois</TabsTrigger>
+                  <TabsTrigger value="week" className="text-xs">Semaine</TabsTrigger>
+                  <TabsTrigger value="day" className="text-xs">Jour</TabsTrigger>
+                </TabsList>
+              </Tabs>
               <Button variant="outline" size="sm" onClick={() => setCursor(new Date())}>Aujourd'hui</Button>
-              <Button variant="ghost" size="icon" onClick={() => setCursor(addMonths(cursor, 1))}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
             </div>
           </div>
 
-          <div className="grid grid-cols-7 border-b bg-muted/30 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((d) => (
-              <div key={d} className="py-2">{d}</div>
-            ))}
-          </div>
+          {view !== "day" && (
+            <div className="grid grid-cols-7 border-b bg-muted/30 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((d) => (
+                <div key={d} className="py-2">{d}</div>
+              ))}
+            </div>
+          )}
 
-          <div className="grid grid-cols-7">
+          <div className={view === "day" ? "grid grid-cols-1" : "grid grid-cols-7"}>
             {days.map((day) => {
               const dayList = itemsFor(day);
               const inMonth = isSameMonth(day, cursor);
