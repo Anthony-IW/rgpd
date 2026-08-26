@@ -67,30 +67,46 @@ export default function CalendarPage() {
     })();
   }, [user, isClient, canEdit]);
 
+  const [allActions, setAllActions] = useState<any[]>([]);
+
   const reload = async () => {
-    if (!companyId) { setActions([]); setEvents([]); return; }
+    if (!companyId) { setActions([]); setEvents([]); setAllActions([]); return; }
     const [a, e] = await Promise.all([
-      supabase.from("action_plans").select("id, title, description, due_date, status, priority, company_id")
-        .eq("company_id", companyId).not("due_date", "is", null),
+      supabase.from("action_plans").select("id, title, description, due_date, status, pending_status, priority, company_id")
+        .eq("company_id", companyId),
       supabase.from("calendar_events").select("*").eq("company_id", companyId),
     ]);
-    setActions(a.data || []);
+    const list = a.data || [];
+    setAllActions(list);
+    setActions(list.filter((x: any) => x.due_date));
     setEvents(e.data || []);
   };
   useEffect(() => { reload(); }, [companyId]);
 
+  // Gris = en attente de validation (client a déclaré "fait"), Vert = validé conforme/fait
+  const GREY = "#9CA3AF";
+  const GREEN = "#16A34A";
+  const statusColor = (act: any): string | null => {
+    if (!act) return null;
+    if (act.pending_status) return GREY;
+    if (act.status === "conforme" || act.status === "fait" || act.status === "non_applicable") return GREEN;
+    return null;
+  };
+
   const items: CalItem[] = useMemo(() => {
+    const byId = new Map(allActions.map((x) => [x.id, x]));
     const a: CalItem[] = actions.map((x) => ({
       id: `a-${x.id}`, source: "action", title: x.title, date: parseISO(x.due_date),
-      color: x.priority === "haute" ? "#EF4444" : x.priority === "basse" ? "#10B981" : "#F59E0B",
+      color: statusColor(x) ?? (x.priority === "haute" ? "#EF4444" : x.priority === "basse" ? "#10B981" : "#F59E0B"),
       description: x.description, status: x.status, raw: x,
     }));
     const e: CalItem[] = events.map((x) => ({
       id: `e-${x.id}`, source: "event", title: x.title, date: parseISO(x.start_at),
-      color: x.color || "#3B82F6", description: x.description, location: x.location, raw: x,
+      color: statusColor(byId.get(x.related_action_id)) ?? x.color ?? "#3B82F6",
+      description: x.description, location: x.location, raw: x,
     }));
     return [...a, ...e].sort((x, y) => x.date.getTime() - y.date.getTime());
-  }, [actions, events]);
+  }, [actions, events, allActions]);
 
   const monthStart = startOfMonth(cursor);
   const days = useMemo(() => {
