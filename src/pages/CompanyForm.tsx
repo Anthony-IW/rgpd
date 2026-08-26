@@ -31,6 +31,7 @@ export default function CompanyForm() {
   const editing = id && id !== "nouveau";
   const [form, setForm] = useState<any>(empty);
   const [loading, setLoading] = useState(false);
+  const [newClosedDate, setNewClosedDate] = useState("");
 
   useEffect(() => {
     document.title = editing ? "Modifier entreprise | Audit RGPD" : "Nouvelle entreprise | Audit RGPD";
