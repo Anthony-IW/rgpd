@@ -315,6 +315,8 @@ export type Database = {
         Row: {
           address: string | null
           city: string | null
+          closed_dates: string[]
+          closed_weekdays: number[]
           contact_email: string | null
           contact_name: string | null
           contact_phone: string | null
@@ -344,6 +346,8 @@ export type Database = {
         Insert: {
           address?: string | null
           city?: string | null
+          closed_dates?: string[]
+          closed_weekdays?: number[]
           contact_email?: string | null
           contact_name?: string | null
           contact_phone?: string | null
@@ -373,6 +377,8 @@ export type Database = {
         Update: {
           address?: string | null
           city?: string | null
+          closed_dates?: string[]
+          closed_weekdays?: number[]
           contact_email?: string | null
           contact_name?: string | null
           contact_phone?: string | null
