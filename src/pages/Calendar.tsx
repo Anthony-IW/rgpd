@@ -211,6 +211,20 @@ export default function CalendarPage() {
     toast.success("Échéance modifiée"); reload();
   };
 
+  // Déplace le repère « Fin : … » et l'échéance de l'action associée
+  const updateEndMarker = async (ev: any, actionId: string, newDate: string) => {
+    const start = new Date(ev.start_at);
+    const next = new Date(newDate);
+    next.setHours(start.getHours(), start.getMinutes(), 0, 0);
+    const { error } = await supabase.from("calendar_events")
+      .update({ start_at: next.toISOString(), end_at: ev.end_at ? next.toISOString() : null })
+      .eq("id", ev.id);
+    if (error) return toast.error(error.message);
+    const { error: e2 } = await supabase.from("action_plans").update({ due_date: newDate }).eq("id", actionId);
+    if (e2) return toast.error(e2.message);
+    toast.success("Échéance modifiée"); reload();
+  };
+
   return (
     <div className="mx-auto max-w-7xl">
       <PageHeader
