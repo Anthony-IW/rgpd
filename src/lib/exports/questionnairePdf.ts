@@ -226,6 +226,19 @@ export function printQuestionnairePDF(opts: {
         doc.setTextColor(...DARK);
         doc.text(answerText, M + 8, cy + 3);
         cy += answerText.length * 3.8 + 3;
+      } else if (fillable) {
+        const h = Math.max(1, commentLines) * 6;
+        const tf = new AcroFormTextField() as any;
+        tf.fieldName = `q${fieldIndex}_commentaire`;
+        tf.Rect = [M + 4, cy, W - 8, h];
+        tf.multiline = true;
+        tf.fontSize = 9;
+        tf.color = "#222222";
+        (doc as any).addField(tf);
+        doc.setDrawColor(190, 190, 190);
+        doc.setLineWidth(0.2);
+        doc.rect(M + 4, cy, W - 8, h, "S");
+        cy += h + 2;
       } else {
         doc.setDrawColor(190, 190, 190);
         doc.setLineWidth(0.2);
