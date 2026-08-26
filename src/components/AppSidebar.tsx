@@ -5,6 +5,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard, Building2, ClipboardCheck, FileText, ListChecks, BookOpen, LogOut, Shield, ClipboardList, CalendarDays,
+  Handshake, FileQuestion, TriangleAlert, CheckCircle, ShieldCheck,
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +16,11 @@ const auditorItems = [
   { title: "Entreprises", url: "/entreprises", icon: Building2 },
   { title: "Audits RGPD", url: "/audits", icon: ClipboardCheck },
   { title: "Registre traitements", url: "/registre", icon: FileText },
+  { title: "Sous-traitants & DPA", url: "/sous-traitants", icon: Handshake },
+  { title: "Demandes de droits", url: "/droits", icon: FileQuestion },
+  { title: "Violations", url: "/violations", icon: TriangleAlert },
+  { title: "Consentements", url: "/consentements", icon: CheckCircle },
+  { title: "DPIA", url: "/dpia", icon: ShieldCheck },
   { title: "Plan d'actions", url: "/actions", icon: ListChecks },
   { title: "Calendrier", url: "/calendrier", icon: CalendarDays },
   { title: "Bibliothèque", url: "/bibliotheque", icon: BookOpen },

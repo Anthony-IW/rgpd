@@ -9,7 +9,7 @@ import {
   computeCategoryScore,
   computeGlobalScore,
 } from "@/data/rgpdReferential";
-import { fileName, fmtDate, fmtBool, joinList } from "./exportHelpers";
+import { fileName, fmtDate, fmtBool, joinList, slug } from "./exportHelpers";
 
 function autoWidths(rows: any[][]): { wch: number }[] {
   if (!rows.length) return [];
@@ -212,4 +212,25 @@ export function exportCompanySheetXLSX(company: any, audits: any[], processing: 
   ]), "Actions");
 
   save(wb, fileName("fiche_entreprise", "xlsx", company.name));
+}
+
+/* -------- Generic export -------- */
+export function exportGenericXLSX({
+  title,
+  columns,
+  rows,
+  sheetName,
+  baseName,
+  companyName,
+}: {
+  title: string;
+  columns: string[];
+  rows: any[][];
+  sheetName: string;
+  baseName: string;
+  companyName?: string;
+}) {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, aoaSheet([columns, ...rows]), sheetName.slice(0, 31));
+  save(wb, fileName(slug(baseName), "xlsx", companyName));
 }

@@ -433,6 +433,187 @@ export type Database = {
           },
         ]
       }
+      consents: {
+        Row: {
+          company_id: string
+          created_at: string
+          form_version: string | null
+          given_at: string | null
+          id: string
+          notes: string | null
+          owner_id: string
+          proof: string | null
+          purpose: string
+          status: string
+          updated_at: string
+          withdrawn_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          form_version?: string | null
+          given_at?: string | null
+          id?: string
+          notes?: string | null
+          owner_id: string
+          proof?: string | null
+          purpose: string
+          status?: string
+          updated_at?: string
+          withdrawn_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          form_version?: string | null
+          given_at?: string | null
+          id?: string
+          notes?: string | null
+          owner_id?: string
+          proof?: string | null
+          purpose?: string
+          status?: string
+          updated_at?: string
+          withdrawn_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_breaches: {
+        Row: {
+          affected_count: number | null
+          company_id: string
+          created_at: string
+          data_categories: string[] | null
+          description: string | null
+          discovery_at: string
+          id: string
+          measures_taken: string | null
+          notification_due_at: string | null
+          notified_cnil: boolean | null
+          notified_subjects: boolean | null
+          owner_id: string
+          related_action_id: string | null
+          severity: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          affected_count?: number | null
+          company_id: string
+          created_at?: string
+          data_categories?: string[] | null
+          description?: string | null
+          discovery_at: string
+          id?: string
+          measures_taken?: string | null
+          notification_due_at?: string | null
+          notified_cnil?: boolean | null
+          notified_subjects?: boolean | null
+          owner_id: string
+          related_action_id?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          affected_count?: number | null
+          company_id?: string
+          created_at?: string
+          data_categories?: string[] | null
+          description?: string | null
+          discovery_at?: string
+          id?: string
+          measures_taken?: string | null
+          notification_due_at?: string | null
+          notified_cnil?: boolean | null
+          notified_subjects?: boolean | null
+          owner_id?: string
+          related_action_id?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_breaches_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_breaches_related_action_id_fkey"
+            columns: ["related_action_id"]
+            isOneToOne: false
+            referencedRelation: "action_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_subject_requests: {
+        Row: {
+          channel: string | null
+          company_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          owner_id: string
+          received_at: string
+          requester_email: string | null
+          requester_name: string | null
+          response_due_at: string | null
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          channel?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          owner_id: string
+          received_at: string
+          requester_email?: string | null
+          requester_name?: string | null
+          response_due_at?: string | null
+          status?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          owner_id?: string
+          received_at?: string
+          requester_email?: string | null
+          requester_name?: string | null
+          response_due_at?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_subject_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           category: string
@@ -471,6 +652,85 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      dpia: {
+        Row: {
+          audit_id: string | null
+          company_id: string
+          created_at: string
+          id: string
+          measures: string | null
+          necessity_assessment: string | null
+          owner_id: string
+          processing_record_id: string | null
+          proportionality_assessment: string | null
+          residual_risk_score: number | null
+          risk_assessment: string | null
+          status: string
+          title: string
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          audit_id?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          measures?: string | null
+          necessity_assessment?: string | null
+          owner_id: string
+          processing_record_id?: string | null
+          proportionality_assessment?: string | null
+          residual_risk_score?: number | null
+          risk_assessment?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          audit_id?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          measures?: string | null
+          necessity_assessment?: string | null
+          owner_id?: string
+          processing_record_id?: string | null
+          proportionality_assessment?: string | null
+          residual_risk_score?: number | null
+          risk_assessment?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dpia_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dpia_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dpia_processing_record_id_fkey"
+            columns: ["processing_record_id"]
+            isOneToOne: false
+            referencedRelation: "processing_records"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_log: {
         Row: {
@@ -626,6 +886,68 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      subcontractors: {
+        Row: {
+          company_id: string
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          country: string | null
+          created_at: string
+          dpa_renewal_date: string | null
+          dpa_signed_at: string | null
+          id: string
+          name: string
+          notes: string | null
+          owner_id: string
+          safeguards: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          company_id: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string
+          dpa_renewal_date?: string | null
+          dpa_signed_at?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          owner_id: string
+          safeguards?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          company_id?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string
+          dpa_renewal_date?: string | null
+          dpa_signed_at?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          owner_id?: string
+          safeguards?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subcontractors_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
