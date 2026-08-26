@@ -79,6 +79,7 @@ export function QuestionnaireExportDialog({
       includeHelp,
       includeAnswers,
       commentLines,
+      fillable: fillable && !includeAnswers,
       intro:
         "Merci de cocher pour chaque point l'état de conformité et de préciser vos commentaires ou éléments de preuve dans l'espace prévu.",
     });
@@ -95,7 +96,11 @@ export function QuestionnaireExportDialog({
       includeHelp,
       includeAnswers: false,
       commentLines: Math.max(commentLines, 3),
+      fillable,
       intro:
+        (fillable
+          ? "Questionnaire vierge remplissable : ce PDF contient des champs de formulaire (cases à cocher et zones de commentaire) que vous pouvez compléter directement dans un navigateur ou un logiciel PDF, puis enregistrer. "
+          : "") +
         "Questionnaire vierge : cochez pour chaque point l'état de conformité (À faire, Conforme, Partiel, Non conforme, Non applicable) et complétez la zone de commentaire sous chaque question.",
     });
     setOpen(false);
@@ -127,6 +132,10 @@ export function QuestionnaireExportDialog({
           <div className="flex items-center gap-2">
             <Switch id="answers" checked={includeAnswers} onCheckedChange={setIncludeAnswers} />
             <Label htmlFor="answers">Pré-remplir les réponses</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch id="fillable" checked={fillable} onCheckedChange={setFillable} disabled={includeAnswers} />
+            <Label htmlFor="fillable">PDF remplissable</Label>
           </div>
           <div className="flex items-center gap-2">
             <Label htmlFor="lines">Lignes de commentaire</Label>
