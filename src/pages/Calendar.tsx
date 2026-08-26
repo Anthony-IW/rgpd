@@ -253,22 +253,35 @@ export default function CalendarPage() {
         <CardContent className="p-0">
           <div className="flex flex-col gap-2 border-b p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center justify-between gap-1 sm:justify-start">
-              <Button variant="ghost" size="icon" onClick={goPrev}><ChevronLeft className="h-4 w-4" /></Button>
-              <h2 className="text-sm sm:text-lg font-semibold capitalize">{periodLabel}</h2>
-              <Button variant="ghost" size="icon" onClick={goNext}><ChevronRight className="h-4 w-4" /></Button>
+              {isCalendarView && <Button variant="ghost" size="icon" onClick={goPrev}><ChevronLeft className="h-4 w-4" /></Button>}
+              <h2 className="text-sm sm:text-lg font-semibold capitalize">
+                {isCalendarView ? periodLabel : view === "gantt" ? "Diagramme de Gantt" : view === "timeline" ? "Timeline" : "Kanban"}
+              </h2>
+              {isCalendarView && <Button variant="ghost" size="icon" onClick={goNext}><ChevronRight className="h-4 w-4" /></Button>}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 overflow-x-auto">
               <Tabs value={view} onValueChange={(v) => setView(v as any)}>
                 <TabsList className="h-8">
                   <TabsTrigger value="month" className="text-xs">Mois</TabsTrigger>
                   <TabsTrigger value="week" className="text-xs">Semaine</TabsTrigger>
                   <TabsTrigger value="day" className="text-xs">Jour</TabsTrigger>
+                  <TabsTrigger value="gantt" className="text-xs">Gantt</TabsTrigger>
+                  <TabsTrigger value="timeline" className="text-xs">Timeline</TabsTrigger>
+                  <TabsTrigger value="kanban" className="text-xs">Kanban</TabsTrigger>
                 </TabsList>
               </Tabs>
-              <Button variant="outline" size="sm" onClick={() => setCursor(new Date())}>Aujourd'hui</Button>
+              {isCalendarView && <Button variant="outline" size="sm" onClick={() => setCursor(new Date())}>Aujourd'hui</Button>}
             </div>
           </div>
 
+          {view === "gantt" && <GanttView tasks={tasks} />}
+          {view === "timeline" && <TimelineView items={items} />}
+          {view === "kanban" && (
+            <KanbanView actions={allActions} canEdit={canEdit} onStatusChange={updateActionStatus} />
+          )}
+
+          {isCalendarView && (
+            <>
           {view !== "day" && (
             <div
               className="grid border-b bg-muted/30 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground"
@@ -284,6 +297,7 @@ export default function CalendarPage() {
             className="grid"
             style={{ gridTemplateColumns: view === "day" ? "minmax(0, 1fr)" : `repeat(${Math.max(openWeekdays.length, 1)}, minmax(0, 1fr))` }}
           >
+
             {days.map((day) => {
               const dayList = itemsFor(day);
               const inMonth = isSameMonth(day, cursor);
