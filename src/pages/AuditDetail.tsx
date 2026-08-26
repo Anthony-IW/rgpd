@@ -165,6 +165,7 @@ export default function AuditDetail() {
         icon={ClipboardCheck}
         actions={
           <>
+            <QuestionnaireExportDialog auditTitle={audit.title} companyName={company?.name} responses={responses} />
             <ExportMenu label="Rapport" onPdf={exportPdf} onExcel={exportExcel} />
             <AlertDialog>
               <AlertDialogTrigger asChild>
