@@ -20,6 +20,7 @@ import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { isOpenDay, WEEKDAYS } from "@/lib/workingDays";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { buildTasks, GanttView, TimelineView, KanbanView } from "@/components/calendar/CalendarViews";
 
 type CalItem = {
   id: string;
