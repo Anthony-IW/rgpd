@@ -69,23 +69,43 @@ export default function Companies() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((c) => (
-            <Link key={c.id} to={`/entreprises/${c.id}`}>
-              <Card className="h-full border-2 transition-smooth hover:shadow-elegant hover:-translate-y-0.5">
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold leading-tight">{c.name}</h3>
-                    {c.has_dpo && <Badge variant="secondary" className="shrink-0"><Shield className="mr-1 h-3 w-3" />DPO</Badge>}
-                  </div>
-                  {c.sector && <p className="mt-1 text-xs text-muted-foreground">{c.sector}{c.size ? ` · ${c.size}` : ""}</p>}
-                  <div className="mt-3 space-y-1 text-sm">
-                    {c.city && <div className="flex items-center gap-1.5 text-muted-foreground"><MapPin className="h-3.5 w-3.5" />{c.city}</div>}
-                    {c.contact_email && <div className="flex items-center gap-1.5 text-muted-foreground truncate"><Mail className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{c.contact_email}</span></div>}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+            <div key={c.id} className="relative">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="absolute right-2 top-2 z-10 h-8 w-8 text-destructive hover:bg-destructive/10">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Supprimer cette entreprise ?</AlertDialogTitle>
+                    <AlertDialogDescription>« {c.name} » et tous les audits, traitements et actions associés seront supprimés définitivement.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => removeCompany(c.id)} className="bg-destructive">Supprimer</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Link to={`/entreprises/${c.id}`}>
+                <Card className="h-full border-2 transition-smooth hover:shadow-elegant hover:-translate-y-0.5">
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between gap-2 pr-8">
+                      <h3 className="font-semibold leading-tight">{c.name}</h3>
+                      {c.has_dpo && <Badge variant="secondary" className="shrink-0"><Shield className="mr-1 h-3 w-3" />DPO</Badge>}
+                    </div>
+                    {c.sector && <p className="mt-1 text-xs text-muted-foreground">{c.sector}{c.size ? ` · ${c.size}` : ""}</p>}
+                    <div className="mt-3 space-y-1 text-sm">
+                      {c.city && <div className="flex items-center gap-1.5 text-muted-foreground"><MapPin className="h-3.5 w-3.5" />{c.city}</div>}
+                      {c.contact_email && <div className="flex items-center gap-1.5 text-muted-foreground truncate"><Mail className="h-3.5 w-3.5 shrink-0" /><span className="truncate">{c.contact_email}</span></div>}
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
           ))}
         </div>
+
       )}
     </div>
   );
