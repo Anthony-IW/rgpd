@@ -11,6 +11,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { ListChecks, Plus, Trash2, Hourglass, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { ACTION_STATUS_META, PRIORITY_META } from "@/data/rgpdReferential";
@@ -75,8 +79,10 @@ export default function Actions() {
   };
 
   const remove = async (id: string) => {
-    await supabase.from("action_plans").delete().eq("id", id);
+    const { error } = await supabase.from("action_plans").delete().eq("id", id);
+    if (error) return toast.error(error.message);
     setActions((a) => a.filter((x) => x.id !== id));
+    toast.success("Action supprimée");
   };
 
   return (
@@ -173,7 +179,21 @@ export default function Actions() {
                       <SelectContent>{Object.entries(ACTION_STATUS_META).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent>
                     </Select>
                   )}
-                  <Button variant="ghost" size="icon" onClick={() => remove(a.id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-destructive" aria-label="Supprimer l'action"><Trash2 className="h-4 w-4" /></Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Supprimer cette action ?</AlertDialogTitle>
+                        <AlertDialogDescription>« {a.title} » sera définitivement supprimée du plan d'actions, ainsi que ses pièces jointes.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => remove(a.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Supprimer</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
                 <ActionAttachments actionId={a.id} companyId={a.company_id} />
               </CardContent>
