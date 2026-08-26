@@ -33,7 +33,12 @@ export default function CompanyForm() {
     document.title = editing ? "Modifier entreprise | Audit RGPD" : "Nouvelle entreprise | Audit RGPD";
     if (editing) {
       supabase.from("companies").select("*").eq("id", id).single().then(({ data }) => {
-        if (data) setForm({ ...data, employees_count: data.employees_count ?? "" });
+        if (data) setForm({
+          ...data,
+          employees_count: data.employees_count ?? "",
+          closed_weekdays: data.closed_weekdays ?? [0, 6],
+          closed_dates: data.closed_dates ?? [],
+        });
       });
     }
   }, [id, editing]);
