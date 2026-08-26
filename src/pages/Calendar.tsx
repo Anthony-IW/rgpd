@@ -123,6 +123,18 @@ export default function CalendarPage() {
     return [...a, ...e].sort((x, y) => x.date.getTime() - y.date.getTime());
   }, [actions, events, allActions]);
 
+  const tasks = useMemo(() => buildTasks(allActions, events), [allActions, events]);
+  const isCalendarView = view === "month" || view === "week" || view === "day";
+
+  const updateActionStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from("action_plans").update({
+      status,
+      completed_at: status === "fait" || status === "conforme" ? new Date().toISOString() : null,
+    }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Statut mis à jour"); reload();
+  };
+
 
   const company = useMemo(() => companies.find((c) => c.id === companyId), [companies, companyId]);
   const closure = useMemo(() => ({
