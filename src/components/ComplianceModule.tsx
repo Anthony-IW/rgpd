@@ -354,7 +354,7 @@ export function ComplianceModule({
             <div className="grid gap-4 py-2 sm:grid-cols-2">
               {fields.map((f) => (
                 <div key={f.key} className={`space-y-1.5 ${f.type === "textarea" ? "sm:col-span-2" : ""}`}>
-                  <Label>{f.label}{f.required && <span className="text-destructive"> *</span>}</Label>
+                  <Label htmlFor={f.key}>{f.label}{f.required && <span className="text-destructive"> *</span>}</Label>
                   {renderFormField(f)}
                 </div>
               ))}
