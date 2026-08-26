@@ -69,8 +69,8 @@ export default function CalendarPage() {
 
   const reload = async () => {
     if (!companyId) { setActions([]); setEvents([]); return; }
-    const [a, e] = await Promise.all([
-      supabase.from("action_plans").select("id, title, description, due_date, status, priority, company_id")
+    const [a, e, all] = await Promise.all([
+      supabase.from("action_plans").select("id, title, description, due_date, status, pending_status, priority, company_id")
         .eq("company_id", companyId).not("due_date", "is", null),
       supabase.from("calendar_events").select("*").eq("company_id", companyId),
     ]);
