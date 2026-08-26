@@ -369,9 +369,11 @@ export default function CalendarPage() {
             <div className="grid gap-3 md:grid-cols-2">
               <div><Label>Début *</Label><Input type="datetime-local" value={form.start_at} onChange={(e) => setForm({ ...form, start_at: e.target.value })} /></div>
               <div><Label>Fin</Label><Input type="datetime-local" value={form.end_at} onChange={(e) => setForm({ ...form, end_at: e.target.value })} /></div>
-              <div><Label>Lieu</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
-              <div><Label>Couleur</Label><Input type="color" value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} className="h-10 p-1" /></div>
+              <div className="md:col-span-2"><Label>Lieu</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
             </div>
+            <p className="rounded-md bg-muted/50 p-2 text-xs text-muted-foreground">
+              Les événements manuels apparaissent en bleu. Les repères « Fin : … » générés depuis le plan d'actions restent en rouge.
+            </p>
           </div>
           <DialogFooter className="gap-2">
             {editingEvent && (
