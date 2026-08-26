@@ -30,6 +30,7 @@ type CalItem = {
   description?: string;
   location?: string;
   status?: string;
+  relatedActionId?: string;
   raw: any;
 };
 
@@ -96,18 +97,31 @@ export default function CalendarPage() {
 
   const items: CalItem[] = useMemo(() => {
     const byId = new Map(allActions.map((x) => [x.id, x]));
-    const a: CalItem[] = actions.map((x) => ({
-      id: `a-${x.id}`, source: "action", title: x.title, date: parseISO(x.due_date),
-      color: statusColor(x) ?? "#3B82F6",
-      description: x.description, status: x.status, raw: x,
-    }));
+    // Un repère « Fin : … » remplace la ligne d'action du même jour (pas de doublon)
+    const endEventByAction = new Map<string, any>();
+    events.forEach((x) => {
+      if (x.related_action_id && /^fin\s*:/i.test(x.title || "")) endEventByAction.set(x.related_action_id, x);
+    });
+    const a: CalItem[] = actions
+      .filter((x) => {
+        const ev = endEventByAction.get(x.id);
+        return !(ev && isSameDay(parseISO(ev.start_at), parseISO(x.due_date)));
+      })
+      .map((x) => ({
+        id: `a-${x.id}`, source: "action", title: x.title, date: parseISO(x.due_date),
+        color: statusColor(x) ?? "#3B82F6",
+        description: x.description, status: x.status, raw: x,
+      }));
     const e: CalItem[] = events.map((x) => ({
       id: `e-${x.id}`, source: "event", title: x.title, date: parseISO(x.start_at),
       color: statusColor(byId.get(x.related_action_id)) ?? x.color ?? "#3B82F6",
-      description: x.description, location: x.location, raw: x,
+      description: x.description, location: x.location,
+      relatedActionId: /^fin\s*:/i.test(x.title || "") ? x.related_action_id ?? undefined : undefined,
+      raw: x,
     }));
     return [...a, ...e].sort((x, y) => x.date.getTime() - y.date.getTime());
   }, [actions, events, allActions]);
+
 
   const company = useMemo(() => companies.find((c) => c.id === companyId), [companies, companyId]);
   const closure = useMemo(() => ({
@@ -194,6 +208,20 @@ export default function CalendarPage() {
   const updateActionDueDate = async (actionId: string, newDate: string) => {
     const { error } = await supabase.from("action_plans").update({ due_date: newDate }).eq("id", actionId);
     if (error) return toast.error(error.message);
+    toast.success("Échéance modifiée"); reload();
+  };
+
+  // Déplace le repère « Fin : … » et l'échéance de l'action associée
+  const updateEndMarker = async (ev: any, actionId: string, newDate: string) => {
+    const start = new Date(ev.start_at);
+    const next = new Date(newDate);
+    next.setHours(start.getHours(), start.getMinutes(), 0, 0);
+    const { error } = await supabase.from("calendar_events")
+      .update({ start_at: next.toISOString(), end_at: ev.end_at ? next.toISOString() : null })
+      .eq("id", ev.id);
+    if (error) return toast.error(error.message);
+    const { error: e2 } = await supabase.from("action_plans").update({ due_date: newDate }).eq("id", actionId);
+    if (e2) return toast.error(e2.message);
     toast.success("Échéance modifiée"); reload();
   };
 
@@ -334,12 +362,16 @@ export default function CalendarPage() {
                       </div>
                       {it.description && <p className="mt-1 text-xs text-muted-foreground">{it.description}</p>}
                       {it.location && <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1"><MapPin className="h-3 w-3" />{it.location}</p>}
-                      {canEdit && it.source === "action" && (
+                      {canEdit && (it.source === "action" || it.relatedActionId) && (
                         <div className="mt-2 flex items-center gap-2">
                           <Label className="text-xs">Modifier l'échéance :</Label>
                           <Input type="date" className="h-7 w-40 text-xs"
                             defaultValue={format(it.date, "yyyy-MM-dd")}
-                            onChange={(e) => e.target.value && updateActionDueDate(it.raw.id, e.target.value)}
+                            onChange={(e) => {
+                              if (!e.target.value) return;
+                              if (it.source === "action") updateActionDueDate(it.raw.id, e.target.value);
+                              else updateEndMarker(it.raw, it.relatedActionId!, e.target.value);
+                            }}
                           />
                         </div>
                       )}
