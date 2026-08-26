@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,17 +37,6 @@ export default function Auth() {
     else { toast.success("Bienvenue !"); navigate("/"); }
   };
 
-
-
-
-  const handleGoogle = async () => {
-    setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
-    if (result.error) { toast.error("Connexion Google impossible"); setLoading(false); return; }
-    if (result.redirected) return;
-    navigate("/");
-  };
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-subtle p-4">
       <div className="w-full max-w-md">
@@ -79,16 +67,6 @@ export default function Auth() {
             <p className="mt-3 text-center text-xs text-muted-foreground">
               Les comptes sont créés uniquement par l'administrateur. Contactez-le pour obtenir vos accès.
             </p>
-
-
-            <div className="my-4 flex items-center gap-3">
-              <div className="h-px flex-1 bg-border" />
-              <span className="text-xs uppercase text-muted-foreground">ou</span>
-              <div className="h-px flex-1 bg-border" />
-            </div>
-            <Button variant="outline" className="w-full" onClick={handleGoogle} disabled={loading}>
-              Continuer avec Google
-            </Button>
           </CardContent>
         </Card>
       </div>
