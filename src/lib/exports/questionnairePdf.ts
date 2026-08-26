@@ -198,7 +198,7 @@ export function printQuestionnairePDF(opts: {
       doc.setFontSize(7.5);
       doc.setTextColor(...GREY);
       doc.text(
-        answerText.length ? "Commentaire :" : "Commentaire / elements de preuve :",
+        answerText.length ? "Commentaire :" : "Commentaire / éléments de preuve :",
         M + 4,
         cy
       );
