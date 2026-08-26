@@ -176,9 +176,30 @@ export default function AuditDetail() {
                       <div key={q.id} className="rounded-lg border bg-background p-3">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="flex-1 min-w-[240px]">
-                            <p className="text-sm font-medium">{q.text}</p>
+                            <div className="flex items-start gap-1.5">
+                              <p className="text-sm font-medium">{q.text}</p>
+                              {(q.help || QUESTION_HELP[q.id]) && (
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button
+                                      type="button"
+                                      aria-label="Aide sur cette question"
+                                      className="mt-0.5 shrink-0 rounded-full text-muted-foreground transition-smooth hover:text-primary"
+                                    >
+                                      <HelpCircle className="h-4 w-4" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent align="start" className="w-[min(22rem,calc(100vw-2rem))] text-xs leading-relaxed">
+                                    <p className="mb-1 font-semibold text-primary">Ce qui est attendu</p>
+                                    <p className="text-muted-foreground">{q.help || QUESTION_HELP[q.id]}</p>
+                                    {q.reference && <p className="mt-2 text-[11px] text-muted-foreground/80">Référence : {q.reference}</p>}
+                                  </PopoverContent>
+                                </Popover>
+                              )}
+                            </div>
                             {q.reference && <p className="mt-0.5 text-xs text-muted-foreground">{q.reference}{q.weight && q.weight > 1 ? ` · poids ${q.weight}` : ""}</p>}
                           </div>
+
                           <Select value={r.level} onValueChange={(v) => updateResponse(q, cat.id, { level: v })}>
                             <SelectTrigger className="w-full sm:w-52"><SelectValue /></SelectTrigger>
                             <SelectContent>
