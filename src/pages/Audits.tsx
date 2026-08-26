@@ -50,6 +50,13 @@ export default function Audits() {
     setOpen(false);
     navigate(`/audits/${data.id}`);
   };
+  const removeAudit = async (auditId: string) => {
+    const { error } = await supabase.from("audits").delete().eq("id", auditId);
+    if (error) return toast.error(error.message);
+    toast.success("Audit supprimé");
+    setAudits((s) => s.filter((a) => a.id !== auditId));
+  };
+
 
   return (
     <div className="mx-auto max-w-7xl">
