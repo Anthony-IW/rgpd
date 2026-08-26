@@ -190,6 +190,29 @@ export default function CompanyDetail() {
         </Card>
       </div>
 
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <Card className="border-2">
+          <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Handshake className="h-4 w-4 text-primary" />Sous-traitants</CardTitle></CardHeader>
+          <CardContent><Button variant="link" size="sm" onClick={() => navigate(`/sous-traitants?company=${id}`)} className="px-0">Gérer →</Button></CardContent>
+        </Card>
+        <Card className="border-2">
+          <CardHeader><CardTitle className="flex items-center gap-2 text-base"><FileQuestion className="h-4 w-4 text-primary" />Demandes de droits</CardTitle></CardHeader>
+          <CardContent><Button variant="link" size="sm" onClick={() => navigate(`/droits?company=${id}`)} className="px-0">Gérer →</Button></CardContent>
+        </Card>
+        <Card className="border-2">
+          <CardHeader><CardTitle className="flex items-center gap-2 text-base"><TriangleAlert className="h-4 w-4 text-primary" />Violations</CardTitle></CardHeader>
+          <CardContent><Button variant="link" size="sm" onClick={() => navigate(`/violations?company=${id}`)} className="px-0">Gérer →</Button></CardContent>
+        </Card>
+        <Card className="border-2">
+          <CardHeader><CardTitle className="flex items-center gap-2 text-base"><CheckCircle className="h-4 w-4 text-primary" />Consentements</CardTitle></CardHeader>
+          <CardContent><Button variant="link" size="sm" onClick={() => navigate(`/consentements?company=${id}`)} className="px-0">Gérer →</Button></CardContent>
+        </Card>
+        <Card className="border-2">
+          <CardHeader><CardTitle className="flex items-center gap-2 text-base"><ShieldCheck className="h-4 w-4 text-primary" />DPIA</CardTitle></CardHeader>
+          <CardContent><Button variant="link" size="sm" onClick={() => navigate(`/dpia?company=${id}`)} className="px-0">Gérer →</Button></CardContent>
+        </Card>
+      </div>
+
       <div className="mt-6">
         <CompanyClientsCard companyId={id!} />
       </div>
