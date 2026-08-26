@@ -183,6 +183,19 @@ export function printQuestionnairePDF(opts: {
         const checked = includeAnswers && q.level === l;
         doc.setDrawColor(90, 90, 90);
         doc.setLineWidth(0.3);
+        if (fillable) {
+          const cb = new AcroFormCheckBox();
+          cb.fieldName = `q${fieldIndex}_${l}`;
+          cb.Rect = [bx, cy - 3.2, 3.6, 3.6];
+          cb.appearanceState = checked ? "On" : "Off";
+          cb.maxFontSize = 8;
+          cb.color = "#7a1fa8";
+          doc.addField(cb);
+          doc.setTextColor(...DARK);
+          doc.text(label, bx + 4.9, cy);
+          bx += lw + 10;
+          continue;
+        }
         if (checked) {
           doc.setFillColor(...PURPLE);
           doc.rect(bx, cy - 3, 3.2, 3.2, "FD");
