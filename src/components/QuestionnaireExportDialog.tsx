@@ -184,10 +184,13 @@ export function QuestionnaireExportDialog({
           </Accordion>
         </ScrollArea>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col gap-2 sm:flex-row">
           <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
+          <Button variant="outline" onClick={handleBlankExport}>
+            <FileDown className="mr-2 h-4 w-4" />Questionnaire vierge
+          </Button>
           <Button className="bg-gradient-primary" onClick={handleExport}>
-            <FileDown className="mr-2 h-4 w-4" />Générer le PDF
+            <FileDown className="mr-2 h-4 w-4" />Télécharger le PDF
           </Button>
         </DialogFooter>
       </DialogContent>
