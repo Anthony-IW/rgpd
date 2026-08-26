@@ -81,6 +81,7 @@ export function ComplianceModule({
   title, description, icon, table, moduleKey, fields, listFields, statusField, filterFields = [], exportTitle,
 }: ComplianceModuleProps) {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [companies, setCompanies] = useState<any[]>([]);
   const [companyId, setCompanyId] = useState("");
   const [items, setItems] = useState<any[]>([]);
