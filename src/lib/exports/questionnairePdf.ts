@@ -1,5 +1,6 @@
 import { escapeHtml } from "./exportHelpers";
-import { openPrintHtml } from "./pdfTable";
+import { downloadHtmlPdf } from "./pdfDownload";
+
 import { COMPLIANCE_LEVELS } from "@/data/rgpdReferential";
 
 export type QuestionnaireQuestion = {
