@@ -18,6 +18,7 @@ import {
 } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { isOpenDay, WEEKDAYS } from "@/lib/workingDays";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type CalItem = {
@@ -56,11 +57,11 @@ export default function CalendarPage() {
         const { data: cu } = await supabase.from("company_users").select("company_id").eq("user_id", user!.id);
         const ids = (cu || []).map((x) => x.company_id);
         if (!ids.length) return;
-        const { data } = await supabase.from("companies").select("id, name").in("id", ids).order("name");
+        const { data } = await supabase.from("companies").select("id, name, closed_weekdays, closed_dates").in("id", ids).order("name");
         setCompanies(data || []);
         if (data && data.length) setCompanyId(data[0].id);
       } else {
-        const { data } = await supabase.from("companies").select("id, name").order("name");
+        const { data } = await supabase.from("companies").select("id, name, closed_weekdays, closed_dates").order("name");
         setCompanies(data || []);
         if (data && data.length) setCompanyId(data[0].id);
       }
@@ -108,20 +109,32 @@ export default function CalendarPage() {
     return [...a, ...e].sort((x, y) => x.date.getTime() - y.date.getTime());
   }, [actions, events, allActions]);
 
+  const company = useMemo(() => companies.find((c) => c.id === companyId), [companies, companyId]);
+  const closure = useMemo(() => ({
+    closed_weekdays: company?.closed_weekdays ?? [0, 6],
+    closed_dates: company?.closed_dates ?? [],
+  }), [company]);
+  const openWeekdays = useMemo(
+    () => WEEKDAYS.filter((d) => !(closure.closed_weekdays as number[]).includes(d.value)),
+    [closure],
+  );
+  const isClosed = (d: Date) => !isOpenDay(d, closure);
+
   const monthStart = startOfMonth(cursor);
   const days = useMemo(() => {
     if (view === "day") return [cursor];
-    if (view === "week") {
-      return eachDayOfInterval({
-        start: startOfWeek(cursor, { weekStartsOn: 1 }),
-        end: endOfWeek(cursor, { weekStartsOn: 1 }),
-      });
-    }
-    return eachDayOfInterval({
-      start: startOfWeek(monthStart, { weekStartsOn: 1 }),
-      end: endOfWeek(endOfMonth(cursor), { weekStartsOn: 1 }),
-    });
-  }, [cursor, view]);
+    const range = view === "week"
+      ? eachDayOfInterval({
+          start: startOfWeek(cursor, { weekStartsOn: 1 }),
+          end: endOfWeek(cursor, { weekStartsOn: 1 }),
+        })
+      : eachDayOfInterval({
+          start: startOfWeek(monthStart, { weekStartsOn: 1 }),
+          end: endOfWeek(endOfMonth(cursor), { weekStartsOn: 1 }),
+        });
+    const openDows = openWeekdays.map((d) => d.value);
+    return range.filter((d) => openDows.includes(d.getDay()));
+  }, [cursor, view, openWeekdays]);
 
   const goPrev = () => setCursor(view === "month" ? subMonths(cursor, 1) : view === "week" ? subWeeks(cursor, 1) : addDays(cursor, -1));
   const goNext = () => setCursor(view === "month" ? addMonths(cursor, 1) : view === "week" ? addWeeks(cursor, 1) : addDays(cursor, 1));
@@ -228,18 +241,25 @@ export default function CalendarPage() {
           </div>
 
           {view !== "day" && (
-            <div className="grid grid-cols-7 border-b bg-muted/30 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((d) => (
-                <div key={d} className="py-2">{d}</div>
+            <div
+              className="grid border-b bg-muted/30 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground"
+              style={{ gridTemplateColumns: `repeat(${Math.max(openWeekdays.length, 1)}, minmax(0, 1fr))` }}
+            >
+              {openWeekdays.map((d) => (
+                <div key={d.value} className="py-2">{d.label.slice(0, 3)}</div>
               ))}
             </div>
           )}
 
-          <div className={view === "day" ? "grid grid-cols-1" : "grid grid-cols-7"}>
+          <div
+            className="grid"
+            style={{ gridTemplateColumns: view === "day" ? "minmax(0, 1fr)" : `repeat(${Math.max(openWeekdays.length, 1)}, minmax(0, 1fr))` }}
+          >
             {days.map((day) => {
               const dayList = itemsFor(day);
               const inMonth = isSameMonth(day, cursor);
               const today = isToday(day);
+              const closed = isClosed(day);
               return (
                 <button
                   key={day.toISOString()}
@@ -251,6 +271,7 @@ export default function CalendarPage() {
                     view === "week" && "min-h-[140px] sm:min-h-[220px]",
                     view === "day" && "min-h-[320px]",
                     view === "month" && !inMonth && "bg-muted/20 text-muted-foreground/60",
+                    closed && "bg-muted/60 text-muted-foreground",
                     selectedDay && isSameDay(day, selectedDay) && "ring-2 ring-primary ring-inset",
                   )}
                 >
@@ -259,9 +280,11 @@ export default function CalendarPage() {
                       "inline-flex h-6 items-center justify-center rounded-full px-2 text-xs font-medium",
                       today && "bg-primary text-primary-foreground",
                     )}>{view === "day" ? format(day, "EEEE d MMMM", { locale: fr }) : format(day, "d")}</span>
-                    {dayList.length > 0 && (
+                    {closed ? (
+                      <span className="text-[9px] uppercase text-muted-foreground">Fermé</span>
+                    ) : dayList.length > 0 ? (
                       <span className="text-[10px] text-muted-foreground">{dayList.length}</span>
-                    )}
+                    ) : null}
                   </div>
                   <div className="mt-1 space-y-0.5">
                     {(view === "month" ? dayList.slice(0, 3) : dayList).map((it) => (
