@@ -128,7 +128,8 @@ export default function CalendarPage() {
 
   const updateActionStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("action_plans").update({
-      status,
+      status: status as any,
+
       completed_at: status === "fait" || status === "conforme" ? new Date().toISOString() : null,
     }).eq("id", id);
     if (error) return toast.error(error.message);
