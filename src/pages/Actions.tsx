@@ -62,8 +62,53 @@ export default function Actions() {
 
   useEffect(() => {
     if (!companyId || !auditId) return setActions([]);
+    setSelected([]);
     supabase.from("action_plans").select("*").eq("company_id", companyId).eq("audit_id", auditId).order("due_date", { ascending: true, nullsFirst: false }).then(({ data }) => setActions(data || []));
   }, [companyId, auditId]);
+
+  const company = companies.find((c) => c.id === companyId);
+
+  const toggleSelect = (id: string) =>
+    setSelected((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]);
+
+  const openPlanner = (ids: string[]) => {
+    setSelected(ids);
+    setPlan((p) => ({ ...p, start: toISODate(nextOpenDay(new Date(), company)) }));
+    setPlanOpen(true);
+  };
+
+  const schedule = async () => {
+    const days = Math.max(1, Number(plan.days) || 1);
+    const list = actions.filter((a) => selected.includes(a.id));
+    if (!list.length) return toast.error("Aucune action sélectionnée");
+    let cursor = nextOpenDay(new Date(`${plan.start}T00:00:00`), company);
+
+    const events: any[] = [];
+    const updates: { id: string; due: string }[] = [];
+    for (const a of list) {
+      const start = nextOpenDay(cursor, company);
+      const end = addWorkingDays(start, days, company);
+      events.push(
+        { company_id: companyId, owner_id: user!.id, title: `Début : ${a.title}`, all_day: true, start_at: new Date(`${toISODate(start)}T08:00:00`).toISOString(), color: "#3B82F6", related_action_id: a.id },
+        { company_id: companyId, owner_id: user!.id, title: `Fin : ${a.title}`, all_day: true, start_at: new Date(`${toISODate(end)}T17:00:00`).toISOString(), color: "#EF4444", related_action_id: a.id },
+      );
+      updates.push({ id: a.id, due: toISODate(end) });
+      if (plan.chain) cursor = nextOpenDay(addDays(end, 1), company);
+    }
+
+    // Nettoyer les anciens jalons de ces actions
+    await supabase.from("calendar_events").delete().in("related_action_id", list.map((a) => a.id));
+    const { error } = await supabase.from("calendar_events").insert(events);
+    if (error) return toast.error(error.message);
+    await Promise.all(updates.map((u) => supabase.from("action_plans").update({ due_date: u.due }).eq("id", u.id)));
+    setActions((prev) => prev.map((a) => {
+      const u = updates.find((x) => x.id === a.id);
+      return u ? { ...a, due_date: u.due } : a;
+    }));
+    toast.success(`${list.length} action(s) planifiée(s) dans le calendrier`);
+    setPlanOpen(false); setSelected([]);
+  };
+
 
   const onChangeCompany = (id: string) => {
     setCompanyId(id);
