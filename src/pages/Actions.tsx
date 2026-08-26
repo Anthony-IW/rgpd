@@ -43,7 +43,7 @@ export default function Actions() {
   const [selected, setSelected] = useState<string[]>([]);
   const [planOpen, setPlanOpen] = useState(false);
   const [plan, setPlan] = useState<{ start: string; days: string; chain: boolean }>({
-    start: toISODate(new Date()), days: "5", chain: true,
+    start: toISODate(new Date()), days: "5", chain: false,
   });
 
   useEffect(() => { document.title = "Plan d'actions | RGPD"; supabase.from("companies").select("id, name, closed_weekdays, closed_dates").order("name").then(({ data }) => setCompanies(data || [])); }, []);
@@ -270,11 +270,12 @@ export default function Actions() {
             </div>
             <label className="flex items-center gap-2 text-sm">
               <Checkbox checked={plan.chain} onCheckedChange={(v) => setPlan({ ...plan, chain: !!v })} />
-              Enchaîner les actions (la suivante démarre après la précédente)
+              Enchaîner les actions (sinon toutes démarrent le même jour, en parallèle)
             </label>
             <p className="rounded-md bg-muted/50 p-2 text-xs text-muted-foreground">
-              Seuls les jours d'ouverture de l'entreprise sont comptés (jours de fermeture définis dans la fiche entreprise).
-              Deux repères sont créés dans le calendrier : « Début : … » et « Fin : … ».
+              Par défaut, toutes les actions sélectionnées démarrent à la date choisie et durent le même nombre de jours ouvrés.
+              Seuls les jours d'ouverture de l'entreprise sont comptés (fiche entreprise).
+              Deux repères sont créés : « Début : … » et « Fin : … ».
             </p>
           </div>
           <DialogFooter>
