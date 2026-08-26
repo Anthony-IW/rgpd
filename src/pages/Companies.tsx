@@ -28,6 +28,13 @@ export default function Companies() {
     const { data } = await supabase.from("companies").select("*").order("created_at", { ascending: false });
     setCompanies(data || []);
   }
+  const removeCompany = async (companyId: string) => {
+    const { error } = await supabase.from("companies").delete().eq("id", companyId);
+    if (error) return toast.error(error.message);
+    toast.success("Entreprise supprimée");
+    setCompanies((s) => s.filter((c) => c.id !== companyId));
+  };
+
 
   const filtered = companies.filter((c) =>
     [c.name, c.city, c.sector, c.siret].filter(Boolean).join(" ").toLowerCase().includes(q.toLowerCase())
