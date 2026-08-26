@@ -41,7 +41,7 @@ export default function CalendarPage() {
   const [companies, setCompanies] = useState<any[]>([]);
   const [companyId, setCompanyId] = useState("");
   const [cursor, setCursor] = useState(new Date());
-  const [view, setView] = useState<"month" | "week" | "day">("month");
+  const [view, setView] = useState<"month" | "week" | "day" | "gantt" | "timeline" | "kanban">("month");
   const [actions, setActions] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
