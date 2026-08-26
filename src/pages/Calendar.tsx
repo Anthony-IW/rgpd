@@ -20,6 +20,7 @@ import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { isOpenDay, WEEKDAYS } from "@/lib/workingDays";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { buildTasks, GanttView, TimelineView, KanbanView } from "@/components/calendar/CalendarViews";
 
 type CalItem = {
   id: string;
@@ -40,7 +41,7 @@ export default function CalendarPage() {
   const [companies, setCompanies] = useState<any[]>([]);
   const [companyId, setCompanyId] = useState("");
   const [cursor, setCursor] = useState(new Date());
-  const [view, setView] = useState<"month" | "week" | "day">("month");
+  const [view, setView] = useState<"month" | "week" | "day" | "gantt" | "timeline" | "kanban">("month");
   const [actions, setActions] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
@@ -121,6 +122,19 @@ export default function CalendarPage() {
     }));
     return [...a, ...e].sort((x, y) => x.date.getTime() - y.date.getTime());
   }, [actions, events, allActions]);
+
+  const tasks = useMemo(() => buildTasks(allActions, events), [allActions, events]);
+  const isCalendarView = view === "month" || view === "week" || view === "day";
+
+  const updateActionStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from("action_plans").update({
+      status: status as any,
+
+      completed_at: status === "fait" || status === "conforme" ? new Date().toISOString() : null,
+    }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Statut mis à jour"); reload();
+  };
 
 
   const company = useMemo(() => companies.find((c) => c.id === companyId), [companies, companyId]);
@@ -252,22 +266,35 @@ export default function CalendarPage() {
         <CardContent className="p-0">
           <div className="flex flex-col gap-2 border-b p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center justify-between gap-1 sm:justify-start">
-              <Button variant="ghost" size="icon" onClick={goPrev}><ChevronLeft className="h-4 w-4" /></Button>
-              <h2 className="text-sm sm:text-lg font-semibold capitalize">{periodLabel}</h2>
-              <Button variant="ghost" size="icon" onClick={goNext}><ChevronRight className="h-4 w-4" /></Button>
+              {isCalendarView && <Button variant="ghost" size="icon" onClick={goPrev}><ChevronLeft className="h-4 w-4" /></Button>}
+              <h2 className="text-sm sm:text-lg font-semibold capitalize">
+                {isCalendarView ? periodLabel : view === "gantt" ? "Diagramme de Gantt" : view === "timeline" ? "Timeline" : "Kanban"}
+              </h2>
+              {isCalendarView && <Button variant="ghost" size="icon" onClick={goNext}><ChevronRight className="h-4 w-4" /></Button>}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 overflow-x-auto">
               <Tabs value={view} onValueChange={(v) => setView(v as any)}>
                 <TabsList className="h-8">
                   <TabsTrigger value="month" className="text-xs">Mois</TabsTrigger>
                   <TabsTrigger value="week" className="text-xs">Semaine</TabsTrigger>
                   <TabsTrigger value="day" className="text-xs">Jour</TabsTrigger>
+                  <TabsTrigger value="gantt" className="text-xs">Gantt</TabsTrigger>
+                  <TabsTrigger value="timeline" className="text-xs">Timeline</TabsTrigger>
+                  <TabsTrigger value="kanban" className="text-xs">Kanban</TabsTrigger>
                 </TabsList>
               </Tabs>
-              <Button variant="outline" size="sm" onClick={() => setCursor(new Date())}>Aujourd'hui</Button>
+              {isCalendarView && <Button variant="outline" size="sm" onClick={() => setCursor(new Date())}>Aujourd'hui</Button>}
             </div>
           </div>
 
+          {view === "gantt" && <GanttView tasks={tasks} />}
+          {view === "timeline" && <TimelineView items={items} />}
+          {view === "kanban" && (
+            <KanbanView actions={allActions} canEdit={canEdit} onStatusChange={updateActionStatus} />
+          )}
+
+          {isCalendarView && (
+            <>
           {view !== "day" && (
             <div
               className="grid border-b bg-muted/30 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground"
@@ -283,6 +310,7 @@ export default function CalendarPage() {
             className="grid"
             style={{ gridTemplateColumns: view === "day" ? "minmax(0, 1fr)" : `repeat(${Math.max(openWeekdays.length, 1)}, minmax(0, 1fr))` }}
           >
+
             {days.map((day) => {
               const dayList = itemsFor(day);
               const inMonth = isSameMonth(day, cursor);
@@ -330,7 +358,10 @@ export default function CalendarPage() {
               );
             })}
           </div>
+            </>
+          )}
         </CardContent>
+
       </Card>
 
       {selectedDay && (
