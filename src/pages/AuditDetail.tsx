@@ -276,8 +276,8 @@ export default function AuditDetail() {
                         )}
                         {(r.level === "non_conforme" || r.level === "partiel") && (
                           actionQids.has(q.id) ? (
-                            <Button size="sm" variant="ghost" disabled className="mt-2 text-muted-foreground">
-                              <Check className="mr-1 h-3 w-3" />Action corrective déjà créée
+                            <Button size="sm" variant="outline" onClick={() => deleteActionFromQuestion(q.id)} className="mt-2 text-destructive hover:bg-destructive/10 border-destructive/30">
+                              <Trash2 className="mr-1 h-3 w-3" />Supprimer l'action corrective
                             </Button>
                           ) : (
                             <Button size="sm" variant="outline" onClick={() => createActionFromQuestion(q, cat.id)} className="mt-2">
