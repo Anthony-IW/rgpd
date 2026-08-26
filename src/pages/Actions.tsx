@@ -26,28 +26,58 @@ import { ActionAttachments } from "@/components/ActionAttachments";
 
 export default function Actions() {
   const { user } = useAuth();
-  const [params] = useSearchParams();
-  const preselect = params.get("company");
+  const [params, setParams] = useSearchParams();
+  const preselectCompany = params.get("company");
+  const preselectAudit = params.get("audit");
   const [companies, setCompanies] = useState<any[]>([]);
-  const [companyId, setCompanyId] = useState(preselect || "");
+  const [companyId, setCompanyId] = useState(preselectCompany || "");
+  const [audits, setAudits] = useState<any[]>([]);
+  const [auditId, setAuditId] = useState(preselectAudit || "");
   const [actions, setActions] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>({ title: "", description: "", priority: "moyenne", status: "a_faire", responsible: "", due_date: "" });
 
   useEffect(() => { document.title = "Plan d'actions | RGPD"; supabase.from("companies").select("id, name").order("name").then(({ data }) => setCompanies(data || [])); }, []);
+
   useEffect(() => {
-    if (!companyId) return setActions([]);
-    supabase.from("action_plans").select("*").eq("company_id", companyId).order("due_date", { ascending: true, nullsFirst: false }).then(({ data }) => setActions(data || []));
+    if (!companyId) { setAudits([]); setAuditId(""); return; }
+    supabase.from("audits").select("id, title, start_date").eq("company_id", companyId).order("created_at", { ascending: false }).then(({ data }) => {
+      const list = data || [];
+      setAudits(list);
+      // Conserve l'audit pré-sélectionné s'il appartient bien à cette entreprise
+      const stillValid = list.some((a: any) => a.id === auditId);
+      if (!stillValid) setAuditId(list[0]?.id || "");
+    });
   }, [companyId]);
 
+  useEffect(() => {
+    if (!companyId || !auditId) return setActions([]);
+    supabase.from("action_plans").select("*").eq("company_id", companyId).eq("audit_id", auditId).order("due_date", { ascending: true, nullsFirst: false }).then(({ data }) => setActions(data || []));
+  }, [companyId, auditId]);
+
+  const onChangeCompany = (id: string) => {
+    setCompanyId(id);
+    const next = new URLSearchParams(params);
+    if (id) next.set("company", id); else next.delete("company");
+    next.delete("audit");
+    setParams(next, { replace: true });
+  };
+
+  const onChangeAudit = (id: string) => {
+    setAuditId(id);
+    const next = new URLSearchParams(params);
+    if (id) next.set("audit", id); else next.delete("audit");
+    setParams(next, { replace: true });
+  };
+
   const create = async () => {
-    if (!companyId || !form.title) { toast.error("Entreprise et titre requis"); return; }
+    if (!companyId || !auditId || !form.title) { toast.error("Entreprise, audit et titre requis"); return; }
     const { error } = await supabase.from("action_plans").insert({
-      company_id: companyId, owner_id: user!.id, ...form, due_date: form.due_date || null,
+      company_id: companyId, audit_id: auditId, owner_id: user!.id, ...form, due_date: form.due_date || null,
     });
     if (error) return toast.error(error.message);
     toast.success("Action ajoutée"); setOpen(false); setForm({ title: "", description: "", priority: "moyenne", status: "a_faire", responsible: "", due_date: "" });
-    const { data } = await supabase.from("action_plans").select("*").eq("company_id", companyId);
+    const { data } = await supabase.from("action_plans").select("*").eq("company_id", companyId).eq("audit_id", auditId);
     setActions(data || []);
   };
 
@@ -64,7 +94,7 @@ export default function Actions() {
       completed_at: a.pending_status === "conforme" ? new Date().toISOString() : null,
     }).eq("id", a.id);
     toast.success("Validation acceptée");
-    const { data } = await supabase.from("action_plans").select("*").eq("company_id", companyId);
+    const { data } = await supabase.from("action_plans").select("*").eq("company_id", companyId).eq("audit_id", auditId);
     setActions(data || []);
   };
   const reject = async (a: any) => {
@@ -74,7 +104,7 @@ export default function Actions() {
       validated_by: user!.id, validated_at: new Date().toISOString(), validation_note: note || "Refusée",
     }).eq("id", a.id);
     toast.info("Demande refusée");
-    const { data } = await supabase.from("action_plans").select("*").eq("company_id", companyId);
+    const { data } = await supabase.from("action_plans").select("*").eq("company_id", companyId).eq("audit_id", auditId);
     setActions(data || []);
   };
 
@@ -85,20 +115,23 @@ export default function Actions() {
     toast.success("Action supprimée");
   };
 
+  const selectedCompany = companies.find((x) => x.id === companyId);
+  const selectedAudit = audits.find((x) => x.id === auditId);
+  const exportSubtitle = [selectedCompany?.name, selectedAudit?.title].filter(Boolean).join(" · ");
+
   return (
     <div className="mx-auto max-w-6xl">
       <PageHeader
         title="Plan d'actions"
-        description="Suivi des actions correctives"
+        description="Suivi des actions correctives par audit"
         icon={ListChecks}
         actions={
           <ExportMenu
             disabled={actions.length === 0}
             onPdf={() => {
-              const c = companies.find((x) => x.id === companyId);
               printTablePDF({
                 title: "Plan d'actions RGPD",
-                subtitle: c?.name,
+                subtitle: exportSubtitle,
                 columns: ["Titre", "Description", "Priorité", "Statut", "Responsable", "Échéance"],
                 rows: actions.map((a) => [
                   a.title, a.description,
@@ -108,20 +141,29 @@ export default function Actions() {
                 ]),
               });
             }}
-            onExcel={() => exportActionsXLSX(actions, companies.find((x) => x.id === companyId)?.name)}
+            onExcel={() => exportActionsXLSX(actions, exportSubtitle)}
           />
         }
       />
 
       <Card className="mb-4 border-2"><CardContent className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 p-4">
-        <Label>Entreprise :</Label>
-        <Select value={companyId} onValueChange={setCompanyId}>
-          <SelectTrigger className="w-full sm:w-72"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
-          <SelectContent>{companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-        </Select>
+        <div className="flex flex-col gap-1.5 w-full sm:w-auto sm:flex-1 min-w-[240px]">
+          <Label>Entreprise :</Label>
+          <Select value={companyId} onValueChange={onChangeCompany}>
+            <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+            <SelectContent>{companies.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col gap-1.5 w-full sm:w-auto sm:flex-1 min-w-[240px]">
+          <Label>Audit :</Label>
+          <Select value={auditId} onValueChange={onChangeAudit} disabled={!companyId || audits.length === 0}>
+            <SelectTrigger><SelectValue placeholder={companyId ? (audits.length ? "Sélectionner..." : "Aucun audit") : "Choisir une entreprise"} /></SelectTrigger>
+            <SelectContent>{audits.map((a) => <SelectItem key={a.id} value={a.id}>{a.title}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
         <div className="hidden sm:block sm:flex-1" />
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild><Button disabled={!companyId} className="bg-gradient-primary w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" />Nouvelle action</Button></DialogTrigger>
+          <DialogTrigger asChild><Button disabled={!companyId || !auditId} className="bg-gradient-primary w-full sm:w-auto"><Plus className="mr-2 h-4 w-4" />Nouvelle action</Button></DialogTrigger>
           <DialogContent className="w-[calc(100vw-2rem)] max-w-lg">
             <DialogHeader><DialogTitle>Nouvelle action</DialogTitle></DialogHeader>
             <div className="space-y-3 py-2">
@@ -144,6 +186,8 @@ export default function Actions() {
       </CardContent></Card>
 
       {!companyId ? <p className="text-center text-muted-foreground">Sélectionnez une entreprise.</p> :
+        audits.length === 0 ? <p className="text-center text-muted-foreground py-8">Aucun audit pour cette entreprise.</p> :
+        !auditId ? <p className="text-center text-muted-foreground py-8">Sélectionnez un audit.</p> :
         actions.length === 0 ? <p className="text-center text-muted-foreground py-8">Aucune action.</p> :
         <div className="space-y-2">
           {actions.map((a) => (
