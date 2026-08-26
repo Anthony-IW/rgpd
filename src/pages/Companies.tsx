@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Plus, Search, Mail, MapPin, Shield } from "lucide-react";
+import { Building2, Plus, Search, Mail, MapPin, Shield, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { ExportMenu } from "@/components/ExportMenu";
 import { exportCompaniesXLSX } from "@/lib/exports/excelExport";
 import { printTablePDF } from "@/lib/exports/pdfTable";
