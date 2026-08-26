@@ -16,6 +16,7 @@ import Registry from "./pages/Registry";
 import Actions from "./pages/Actions";
 import Library from "./pages/Library";
 import ClientActions from "./pages/ClientActions";
+import ClientAudit from "./pages/ClientAudit";
 import CalendarPage from "./pages/Calendar";
 import { AuthProvider } from "./hooks/useAuth";
 
