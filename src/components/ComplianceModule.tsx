@@ -94,12 +94,14 @@ export function ComplianceModule({
 
   useEffect(() => {
     document.title = `${title} | RGPD`;
+    const urlCompanyId = searchParams.get("company");
     (supabase.from("companies" as any).select("id, name").order("name") as any).then((res: any) => {
       const list = res.data || [];
       setCompanies(list);
-      if (list.length === 1) setCompanyId(list[0].id);
+      if (urlCompanyId) setCompanyId(urlCompanyId);
+      else if (list.length === 1) setCompanyId(list[0].id);
     });
-  }, [title]);
+  }, [title, searchParams]);
 
   useEffect(() => {
     if (!companyId) { setItems([]); return; }
