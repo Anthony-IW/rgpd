@@ -7,7 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ClipboardCheck, Plus, Calendar } from "lucide-react";
+import { ClipboardCheck, Plus, Calendar, Trash2 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
@@ -46,6 +50,13 @@ export default function Audits() {
     setOpen(false);
     navigate(`/audits/${data.id}`);
   };
+  const removeAudit = async (auditId: string) => {
+    const { error } = await supabase.from("audits").delete().eq("id", auditId);
+    if (error) return toast.error(error.message);
+    toast.success("Audit supprimé");
+    setAudits((s) => s.filter((a) => a.id !== auditId));
+  };
+
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -89,22 +100,42 @@ export default function Audits() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {audits.map((a) => (
-            <Link key={a.id} to={`/audits/${a.id}`}>
-              <Card className="h-full border-2 transition-smooth hover:shadow-elegant hover:-translate-y-0.5">
-                <CardContent className="p-5">
-                  <div className="mb-2 flex items-start justify-between gap-2">
-                    <Badge variant="outline">{AUDIT_STATUS_META[a.status as keyof typeof AUDIT_STATUS_META]?.label}</Badge>
-                    {a.global_score != null && <span className="text-xl font-bold text-phoenix">{a.global_score}%</span>}
-                  </div>
-                  <h3 className="font-semibold leading-tight">{a.title}</h3>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{a.companies?.name}</p>
-                  {a.global_score != null && <Progress value={a.global_score} className="mt-3 h-1.5" />}
-                  {a.start_date && <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground"><Calendar className="h-3 w-3" />Débuté le {new Date(a.start_date).toLocaleDateString("fr-FR")}</div>}
-                </CardContent>
-              </Card>
-            </Link>
+            <div key={a.id} className="relative">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="absolute right-2 top-2 z-10 h-8 w-8 text-destructive hover:bg-destructive/10">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Supprimer cet audit ?</AlertDialogTitle>
+                    <AlertDialogDescription>« {a.title} » et toutes ses réponses seront définitivement supprimés.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => removeAudit(a.id)} className="bg-destructive">Supprimer</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Link to={`/audits/${a.id}`}>
+                <Card className="h-full border-2 transition-smooth hover:shadow-elegant hover:-translate-y-0.5">
+                  <CardContent className="p-5">
+                    <div className="mb-2 flex items-start justify-between gap-2 pr-8">
+                      <Badge variant="outline">{AUDIT_STATUS_META[a.status as keyof typeof AUDIT_STATUS_META]?.label}</Badge>
+                      {a.global_score != null && <span className="text-xl font-bold text-phoenix">{a.global_score}%</span>}
+                    </div>
+                    <h3 className="font-semibold leading-tight">{a.title}</h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{a.companies?.name}</p>
+                    {a.global_score != null && <Progress value={a.global_score} className="mt-3 h-1.5" />}
+                    {a.start_date && <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground"><Calendar className="h-3 w-3" />Débuté le {new Date(a.start_date).toLocaleDateString("fr-FR")}</div>}
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
           ))}
         </div>
+
       )}
     </div>
   );

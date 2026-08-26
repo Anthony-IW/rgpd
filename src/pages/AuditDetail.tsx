@@ -11,7 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ArrowLeft, ClipboardCheck, FileDown, Save, Plus, HelpCircle } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, FileDown, Save, Plus, HelpCircle, Trash2 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
   RGPD_REFERENTIAL, COMPLIANCE_LEVELS, AUDIT_STATUS_META,
@@ -111,6 +115,14 @@ export default function AuditDetail() {
 
   if (!audit) return null;
 
+  async function deleteAudit() {
+    const { error } = await supabase.from("audits").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Audit supprimé");
+    navigate("/audits");
+  }
+
+
   return (
     <div className="mx-auto max-w-6xl">
       <Button variant="ghost" onClick={() => navigate("/audits")} className="mb-4"><ArrowLeft className="mr-2 h-4 w-4" />Audits</Button>
@@ -121,10 +133,26 @@ export default function AuditDetail() {
         actions={
           <>
             <ExportMenu label="Rapport" onPdf={exportPdf} onExcel={exportExcel} />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Supprimer cet audit ?</AlertDialogTitle>
+                  <AlertDialogDescription>Cette action est irréversible. Toutes les réponses de cet audit seront supprimées.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={deleteAudit} className="bg-destructive">Supprimer</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button onClick={() => saveAudit()} disabled={saving} className="bg-gradient-primary"><Save className="mr-2 h-4 w-4" />Enregistrer</Button>
           </>
         }
       />
+
 
       <Card className="mb-6 border-2 bg-gradient-card">
         <CardContent className="grid gap-4 p-5 md:grid-cols-3">
