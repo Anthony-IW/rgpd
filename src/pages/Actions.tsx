@@ -25,7 +25,7 @@ import { fmtDate } from "@/lib/exports/exportHelpers";
 import { ActionAttachments } from "@/components/ActionAttachments";
 import { Checkbox } from "@/components/ui/checkbox";
 import { addWorkingDays, nextOpenDay, toISODate } from "@/lib/workingDays";
-import { addDays, format } from "date-fns";
+import { addDays } from "date-fns";
 
 export default function Actions() {
   const { user } = useAuth();
