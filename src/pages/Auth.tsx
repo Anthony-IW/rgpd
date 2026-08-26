@@ -40,23 +40,8 @@ export default function Auth() {
     else { toast.success("Bienvenue !"); navigate("/"); }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      emailSchema.parse(email); passwordSchema.parse(password);
-    } catch (err: any) { toast.error(err.errors?.[0]?.message ?? "Champs invalides"); return; }
-    setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email, password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: { full_name: fullName },
-      },
-    });
-    setLoading(false);
-    if (error) toast.error(error.message);
-    else { toast.success("Compte créé, connexion..."); navigate("/"); }
-  };
+
+
 
   const handleGoogle = async () => {
     setLoading(true);
