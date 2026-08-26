@@ -124,9 +124,53 @@ export default function CompanyForm() {
         </Card>
 
         <Card className="border-2">
+          <CardHeader><CardTitle>Jours de fermeture</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Jours de fermeture hebdomadaires</Label>
+              <div className="mt-2 flex flex-wrap gap-3">
+                {WEEKDAYS.map((d) => (
+                  <label key={d.value} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={(form.closed_weekdays || []).includes(d.value)}
+                      onCheckedChange={(v) => set("closed_weekdays",
+                        v ? [...(form.closed_weekdays || []), d.value] : (form.closed_weekdays || []).filter((x: number) => x !== d.value))}
+                    />
+                    {d.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label>Fermetures exceptionnelles (congés, jours fériés)</Label>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <Input type="date" value={newClosedDate} onChange={(e) => setNewClosedDate(e.target.value)} className="w-44" />
+                <Button type="button" variant="outline" onClick={() => {
+                  if (!newClosedDate) return;
+                  if (!(form.closed_dates || []).includes(newClosedDate)) set("closed_dates", [...(form.closed_dates || []), newClosedDate].sort());
+                  setNewClosedDate("");
+                }}>Ajouter</Button>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(form.closed_dates || []).map((d: string) => (
+                  <Badge key={d} variant="secondary" className="gap-1">
+                    {new Date(d).toLocaleDateString("fr-FR")}
+                    <button type="button" aria-label="Retirer" onClick={() => set("closed_dates", (form.closed_dates || []).filter((x: string) => x !== d))}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">Ces jours sont exclus du calcul des délais lors de la planification des actions correctives.</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2">
           <CardHeader><CardTitle>Notes</CardTitle></CardHeader>
           <CardContent><Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={4} /></CardContent>
         </Card>
+
 
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={() => navigate(-1)}>Annuler</Button>
