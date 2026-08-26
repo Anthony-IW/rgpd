@@ -1,4 +1,5 @@
 import { RGPD_REFERENTIAL, COMPLIANCE_LEVELS, computeCategoryScore } from "@/data/rgpdReferential";
+import { downloadHtmlPdf } from "@/lib/exports/pdfDownload";
 
 export async function generateAuditPDF(data: {
   audit: any; company: any; responses: Record<string, any>; globalScore: number;
@@ -76,13 +77,14 @@ export async function generateAuditPDF(data: {
     <p class="muted" style="margin-top:32px;border-top:1px solid #ddd;padding-top:8px;">
       Rapport généré par la plateforme d'audit RGPD Informatique &amp; Web - ${new Date().toLocaleString("fr-FR")}
     </p>
-    <script>window.onload=()=>setTimeout(()=>window.print(),300);</script>
     </body></html>`;
 
-  const w = window.open("", "_blank");
-  if (!w) { alert("Veuillez autoriser les pop-ups pour générer le PDF."); return; }
-  w.document.write(html);
-  w.document.close();
+  await downloadHtmlPdf({
+    html,
+    baseName: `rapport_audit_${audit.title || "rgpd"}`,
+    company: company?.name,
+    orientation: "portrait",
+  });
 }
 
 function escapeHtml(s: string): string {
