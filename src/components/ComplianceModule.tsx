@@ -205,8 +205,8 @@ export function ComplianceModule({
   const reload = async () => {
     if (!companyId) return;
     setLoading(true);
-    const { data } = await supabase.from(table as any).select("*").eq("company_id", companyId).order("created_at", { ascending: false });
-    setItems(data || []);
+    const res: any = await supabase.from(table as any).select("*").eq("company_id", companyId).order("created_at", { ascending: false });
+    setItems(res.data || []);
     setLoading(false);
   };
 
