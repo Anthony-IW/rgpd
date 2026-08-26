@@ -15,7 +15,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ListChecks, Plus, Trash2, Hourglass, Check, X } from "lucide-react";
+import { ListChecks, Plus, Trash2, Hourglass, Check, X, CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 import { ACTION_STATUS_META, PRIORITY_META } from "@/data/rgpdReferential";
 import { ExportMenu } from "@/components/ExportMenu";
@@ -23,6 +23,9 @@ import { exportActionsXLSX } from "@/lib/exports/excelExport";
 import { printTablePDF } from "@/lib/exports/pdfTable";
 import { fmtDate } from "@/lib/exports/exportHelpers";
 import { ActionAttachments } from "@/components/ActionAttachments";
+import { Checkbox } from "@/components/ui/checkbox";
+import { addWorkingDays, nextOpenDay, toISODate } from "@/lib/workingDays";
+import { addDays } from "date-fns";
 
 export default function Actions() {
   const { user } = useAuth();
@@ -37,7 +40,14 @@ export default function Actions() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>({ title: "", description: "", priority: "moyenne", status: "a_faire", responsible: "", due_date: "" });
 
-  useEffect(() => { document.title = "Plan d'actions | RGPD"; supabase.from("companies").select("id, name").order("name").then(({ data }) => setCompanies(data || [])); }, []);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [planOpen, setPlanOpen] = useState(false);
+  const [plan, setPlan] = useState<{ start: string; days: string; chain: boolean }>({
+    start: toISODate(new Date()), days: "5", chain: true,
+  });
+
+  useEffect(() => { document.title = "Plan d'actions | RGPD"; supabase.from("companies").select("id, name, closed_weekdays, closed_dates").order("name").then(({ data }) => setCompanies(data || [])); }, []);
+
 
   useEffect(() => {
     if (!companyId) { setAudits([]); setAuditId(""); return; }
@@ -52,8 +62,53 @@ export default function Actions() {
 
   useEffect(() => {
     if (!companyId || !auditId) return setActions([]);
+    setSelected([]);
     supabase.from("action_plans").select("*").eq("company_id", companyId).eq("audit_id", auditId).order("due_date", { ascending: true, nullsFirst: false }).then(({ data }) => setActions(data || []));
   }, [companyId, auditId]);
+
+  const company = companies.find((c) => c.id === companyId);
+
+  const toggleSelect = (id: string) =>
+    setSelected((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]);
+
+  const openPlanner = (ids: string[]) => {
+    setSelected(ids);
+    setPlan((p) => ({ ...p, start: toISODate(nextOpenDay(new Date(), company)) }));
+    setPlanOpen(true);
+  };
+
+  const schedule = async () => {
+    const days = Math.max(1, Number(plan.days) || 1);
+    const list = actions.filter((a) => selected.includes(a.id));
+    if (!list.length) return toast.error("Aucune action sélectionnée");
+    let cursor = nextOpenDay(new Date(`${plan.start}T00:00:00`), company);
+
+    const events: any[] = [];
+    const updates: { id: string; due: string }[] = [];
+    for (const a of list) {
+      const start = nextOpenDay(cursor, company);
+      const end = addWorkingDays(start, days, company);
+      events.push(
+        { company_id: companyId, owner_id: user!.id, title: `Début : ${a.title}`, all_day: true, start_at: new Date(`${toISODate(start)}T08:00:00`).toISOString(), color: "#3B82F6", related_action_id: a.id },
+        { company_id: companyId, owner_id: user!.id, title: `Fin : ${a.title}`, all_day: true, start_at: new Date(`${toISODate(end)}T17:00:00`).toISOString(), color: "#EF4444", related_action_id: a.id },
+      );
+      updates.push({ id: a.id, due: toISODate(end) });
+      if (plan.chain) cursor = nextOpenDay(addDays(end, 1), company);
+    }
+
+    // Nettoyer les anciens jalons de ces actions
+    await supabase.from("calendar_events").delete().in("related_action_id", list.map((a) => a.id));
+    const { error } = await supabase.from("calendar_events").insert(events);
+    if (error) return toast.error(error.message);
+    await Promise.all(updates.map((u) => supabase.from("action_plans").update({ due_date: u.due }).eq("id", u.id)));
+    setActions((prev) => prev.map((a) => {
+      const u = updates.find((x) => x.id === a.id);
+      return u ? { ...a, due_date: u.due } : a;
+    }));
+    toast.success(`${list.length} action(s) planifiée(s) dans le calendrier`);
+    setPlanOpen(false); setSelected([]);
+  };
+
 
   const onChangeCompany = (id: string) => {
     setCompanyId(id);
@@ -185,6 +240,52 @@ export default function Actions() {
         </Dialog>
       </CardContent></Card>
 
+      {actions.length > 0 && (
+        <Card className="mb-4 border-2 border-dashed">
+          <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={selected.length === actions.length && actions.length > 0}
+                onCheckedChange={(v) => setSelected(v ? actions.map((a) => a.id) : [])}
+              />
+              Tout sélectionner
+            </label>
+            <span className="text-sm text-muted-foreground">{selected.length} action(s) sélectionnée(s)</span>
+            <div className="sm:ml-auto">
+              <Button disabled={selected.length === 0} onClick={() => openPlanner(selected)} className="w-full bg-gradient-primary sm:w-auto">
+                <CalendarPlus className="mr-2 h-4 w-4" />Planifier dans le calendrier
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Dialog open={planOpen} onOpenChange={setPlanOpen}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-lg">
+          <DialogHeader><DialogTitle>Planifier {selected.length} action(s)</DialogTitle></DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><Label>Date de début</Label><Input type="date" value={plan.start} onChange={(e) => setPlan({ ...plan, start: e.target.value })} /></div>
+              <div><Label>Jours ouvrés par action</Label><Input type="number" min={1} value={plan.days} onChange={(e) => setPlan({ ...plan, days: e.target.value })} /></div>
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox checked={plan.chain} onCheckedChange={(v) => setPlan({ ...plan, chain: !!v })} />
+              Enchaîner les actions (la suivante démarre après la précédente)
+            </label>
+            <p className="rounded-md bg-muted/50 p-2 text-xs text-muted-foreground">
+              Seuls les jours d'ouverture de l'entreprise sont comptés (jours de fermeture définis dans la fiche entreprise).
+              Deux repères sont créés dans le calendrier : « Début : … » et « Fin : … ».
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPlanOpen(false)}>Annuler</Button>
+            <Button onClick={schedule} className="bg-gradient-primary">Planifier</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
+
       {!companyId ? <p className="text-center text-muted-foreground">Sélectionnez une entreprise.</p> :
         audits.length === 0 ? <p className="text-center text-muted-foreground py-8">Aucun audit pour cette entreprise.</p> :
         !auditId ? <p className="text-center text-muted-foreground py-8">Sélectionnez un audit.</p> :
@@ -194,9 +295,13 @@ export default function Actions() {
             <Card key={a.id} className="border-2">
               <CardContent className="space-y-3 p-4">
                 <div className="flex flex-wrap items-start gap-3">
+                  <Checkbox className="mt-1" checked={selected.includes(a.id)} onCheckedChange={() => toggleSelect(a.id)} aria-label="Sélectionner l'action" />
                   <div className="flex-1 min-w-[240px]">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium">{a.title}</span>
+                      <Button size="sm" variant="ghost" className="h-6 px-1.5 text-xs" onClick={() => openPlanner([a.id])} title="Planifier cette action">
+                        <CalendarPlus className="h-3.5 w-3.5" />
+                      </Button>
                       <Badge variant="outline">{PRIORITY_META[a.priority as keyof typeof PRIORITY_META]?.label}</Badge>
                       {a.pending_status && (
                         <Badge className="bg-warning text-warning-foreground"><Hourglass className="mr-1 h-3 w-3" />Validation demandée : {ACTION_STATUS_META[a.pending_status as keyof typeof ACTION_STATUS_META]?.label}</Badge>

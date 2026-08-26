@@ -9,7 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, ArrowLeft, Save } from "lucide-react";
+import { Building2, ArrowLeft, Save, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { WEEKDAYS } from "@/lib/workingDays";
 import { toast } from "sonner";
 
 const empty = {
@@ -18,6 +21,7 @@ const empty = {
   contact_name: "", contact_email: "", contact_phone: "", contact_role: "",
   has_dpo: false, dpo_name: "", dpo_email: "", dpo_phone: "", dpo_external: false,
   has_representative: false, representative_name: "", notes: "",
+  closed_weekdays: [0, 6] as number[], closed_dates: [] as string[],
 };
 
 export default function CompanyForm() {
@@ -27,12 +31,18 @@ export default function CompanyForm() {
   const editing = id && id !== "nouveau";
   const [form, setForm] = useState<any>(empty);
   const [loading, setLoading] = useState(false);
+  const [newClosedDate, setNewClosedDate] = useState("");
 
   useEffect(() => {
     document.title = editing ? "Modifier entreprise | Audit RGPD" : "Nouvelle entreprise | Audit RGPD";
     if (editing) {
       supabase.from("companies").select("*").eq("id", id).single().then(({ data }) => {
-        if (data) setForm({ ...data, employees_count: data.employees_count ?? "" });
+        if (data) setForm({
+          ...data,
+          employees_count: data.employees_count ?? "",
+          closed_weekdays: data.closed_weekdays ?? [0, 6],
+          closed_dates: data.closed_dates ?? [],
+        });
       });
     }
   }, [id, editing]);
@@ -118,9 +128,53 @@ export default function CompanyForm() {
         </Card>
 
         <Card className="border-2">
+          <CardHeader><CardTitle>Jours de fermeture</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Jours de fermeture hebdomadaires</Label>
+              <div className="mt-2 flex flex-wrap gap-3">
+                {WEEKDAYS.map((d) => (
+                  <label key={d.value} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={(form.closed_weekdays || []).includes(d.value)}
+                      onCheckedChange={(v) => set("closed_weekdays",
+                        v ? [...(form.closed_weekdays || []), d.value] : (form.closed_weekdays || []).filter((x: number) => x !== d.value))}
+                    />
+                    {d.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label>Fermetures exceptionnelles (congés, jours fériés)</Label>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <Input type="date" value={newClosedDate} onChange={(e) => setNewClosedDate(e.target.value)} className="w-44" />
+                <Button type="button" variant="outline" onClick={() => {
+                  if (!newClosedDate) return;
+                  if (!(form.closed_dates || []).includes(newClosedDate)) set("closed_dates", [...(form.closed_dates || []), newClosedDate].sort());
+                  setNewClosedDate("");
+                }}>Ajouter</Button>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(form.closed_dates || []).map((d: string) => (
+                  <Badge key={d} variant="secondary" className="gap-1">
+                    {new Date(d).toLocaleDateString("fr-FR")}
+                    <button type="button" aria-label="Retirer" onClick={() => set("closed_dates", (form.closed_dates || []).filter((x: string) => x !== d))}>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">Ces jours sont exclus du calcul des délais lors de la planification des actions correctives.</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2">
           <CardHeader><CardTitle>Notes</CardTitle></CardHeader>
           <CardContent><Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={4} /></CardContent>
         </Card>
+
 
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={() => navigate(-1)}>Annuler</Button>

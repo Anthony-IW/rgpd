@@ -13,11 +13,12 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { CalendarDays, Plus, ChevronLeft, ChevronRight, Trash2, ListChecks, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import {
-  addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth,
-  isToday, parseISO, startOfMonth, startOfWeek, subMonths,
+  addDays, addMonths, addWeeks, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth,
+  isToday, parseISO, startOfMonth, startOfWeek, subMonths, subWeeks,
 } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type CalItem = {
   id: string;
@@ -37,6 +38,7 @@ export default function CalendarPage() {
   const [companies, setCompanies] = useState<any[]>([]);
   const [companyId, setCompanyId] = useState("");
   const [cursor, setCursor] = useState(new Date());
+  const [view, setView] = useState<"month" | "week" | "day">("month");
   const [actions, setActions] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
@@ -91,10 +93,27 @@ export default function CalendarPage() {
   }, [actions, events]);
 
   const monthStart = startOfMonth(cursor);
-  const days = eachDayOfInterval({
-    start: startOfWeek(monthStart, { weekStartsOn: 1 }),
-    end: endOfWeek(endOfMonth(cursor), { weekStartsOn: 1 }),
-  });
+  const days = useMemo(() => {
+    if (view === "day") return [cursor];
+    if (view === "week") {
+      return eachDayOfInterval({
+        start: startOfWeek(cursor, { weekStartsOn: 1 }),
+        end: endOfWeek(cursor, { weekStartsOn: 1 }),
+      });
+    }
+    return eachDayOfInterval({
+      start: startOfWeek(monthStart, { weekStartsOn: 1 }),
+      end: endOfWeek(endOfMonth(cursor), { weekStartsOn: 1 }),
+    });
+  }, [cursor, view]);
+
+  const goPrev = () => setCursor(view === "month" ? subMonths(cursor, 1) : view === "week" ? subWeeks(cursor, 1) : addDays(cursor, -1));
+  const goNext = () => setCursor(view === "month" ? addMonths(cursor, 1) : view === "week" ? addWeeks(cursor, 1) : addDays(cursor, 1));
+  const periodLabel = view === "month"
+    ? format(cursor, "MMMM yyyy", { locale: fr })
+    : view === "week"
+      ? `Semaine du ${format(startOfWeek(cursor, { weekStartsOn: 1 }), "d MMM", { locale: fr })} au ${format(endOfWeek(cursor, { weekStartsOn: 1 }), "d MMM yyyy", { locale: fr })}`
+      : format(cursor, "EEEE d MMMM yyyy", { locale: fr });
 
   const itemsFor = (d: Date) => items.filter((it) => isSameDay(it.date, d));
   const dayItems = selectedDay ? itemsFor(selectedDay) : [];
@@ -174,28 +193,33 @@ export default function CalendarPage() {
 
       <Card className="border-2 overflow-hidden">
         <CardContent className="p-0">
-          <div className="flex items-center justify-between border-b p-3">
-            <Button variant="ghost" size="icon" onClick={() => setCursor(subMonths(cursor, 1))}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <h2 className="text-base sm:text-lg font-semibold capitalize">
-              {format(cursor, "MMMM yyyy", { locale: fr })}
-            </h2>
-            <div className="flex items-center gap-1">
+          <div className="flex flex-col gap-2 border-b p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center justify-between gap-1 sm:justify-start">
+              <Button variant="ghost" size="icon" onClick={goPrev}><ChevronLeft className="h-4 w-4" /></Button>
+              <h2 className="text-sm sm:text-lg font-semibold capitalize">{periodLabel}</h2>
+              <Button variant="ghost" size="icon" onClick={goNext}><ChevronRight className="h-4 w-4" /></Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Tabs value={view} onValueChange={(v) => setView(v as any)}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="month" className="text-xs">Mois</TabsTrigger>
+                  <TabsTrigger value="week" className="text-xs">Semaine</TabsTrigger>
+                  <TabsTrigger value="day" className="text-xs">Jour</TabsTrigger>
+                </TabsList>
+              </Tabs>
               <Button variant="outline" size="sm" onClick={() => setCursor(new Date())}>Aujourd'hui</Button>
-              <Button variant="ghost" size="icon" onClick={() => setCursor(addMonths(cursor, 1))}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
             </div>
           </div>
 
-          <div className="grid grid-cols-7 border-b bg-muted/30 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((d) => (
-              <div key={d} className="py-2">{d}</div>
-            ))}
-          </div>
+          {view !== "day" && (
+            <div className="grid grid-cols-7 border-b bg-muted/30 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((d) => (
+                <div key={d} className="py-2">{d}</div>
+              ))}
+            </div>
+          )}
 
-          <div className="grid grid-cols-7">
+          <div className={view === "day" ? "grid grid-cols-1" : "grid grid-cols-7"}>
             {days.map((day) => {
               const dayList = itemsFor(day);
               const inMonth = isSameMonth(day, cursor);
@@ -206,29 +230,32 @@ export default function CalendarPage() {
                   onClick={() => { setSelectedDay(day); }}
                   onDoubleClick={() => openCreate(day)}
                   className={cn(
-                    "group relative min-h-[84px] sm:min-h-[110px] border-b border-r p-1.5 text-left transition-colors hover:bg-accent/40",
-                    !inMonth && "bg-muted/20 text-muted-foreground/60",
+                    "group relative border-b border-r p-1.5 text-left transition-colors hover:bg-accent/40",
+                    view === "month" && "min-h-[84px] sm:min-h-[110px]",
+                    view === "week" && "min-h-[140px] sm:min-h-[220px]",
+                    view === "day" && "min-h-[320px]",
+                    view === "month" && !inMonth && "bg-muted/20 text-muted-foreground/60",
                     selectedDay && isSameDay(day, selectedDay) && "ring-2 ring-primary ring-inset",
                   )}
                 >
                   <div className="flex items-center justify-between">
                     <span className={cn(
-                      "inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium",
+                      "inline-flex h-6 items-center justify-center rounded-full px-2 text-xs font-medium",
                       today && "bg-primary text-primary-foreground",
-                    )}>{format(day, "d")}</span>
+                    )}>{view === "day" ? format(day, "EEEE d MMMM", { locale: fr }) : format(day, "d")}</span>
                     {dayList.length > 0 && (
                       <span className="text-[10px] text-muted-foreground">{dayList.length}</span>
                     )}
                   </div>
                   <div className="mt-1 space-y-0.5">
-                    {dayList.slice(0, 3).map((it) => (
+                    {(view === "month" ? dayList.slice(0, 3) : dayList).map((it) => (
                       <div key={it.id}
                         className="truncate rounded px-1 py-0.5 text-[10px] sm:text-xs font-medium text-white"
                         style={{ backgroundColor: it.color }}
                         title={it.title}
                       >{it.title}</div>
                     ))}
-                    {dayList.length > 3 && (
+                    {view === "month" && dayList.length > 3 && (
                       <div className="text-[10px] text-muted-foreground">+{dayList.length - 3}</div>
                     )}
                   </div>
