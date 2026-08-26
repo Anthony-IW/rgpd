@@ -1,4 +1,6 @@
 import { escapeHtml } from "./exportHelpers";
+import { downloadHtmlPdf } from "./pdfDownload";
+
 
 const STYLE = `
   body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#222;margin:24px;}
