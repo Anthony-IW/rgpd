@@ -45,6 +45,11 @@ const App = () => (
               <Route path="/audits" element={<Audits />} />
               <Route path="/audits/:id" element={<AuditDetail />} />
               <Route path="/registre" element={<Registry />} />
+              <Route path="/sous-traitants" element={<Subcontractors />} />
+              <Route path="/droits" element={<DataSubjectRequests />} />
+              <Route path="/violations" element={<DataBreaches />} />
+              <Route path="/consentements" element={<Consents />} />
+              <Route path="/dpia" element={<Dpia />} />
               <Route path="/actions" element={<Actions />} />
               <Route path="/bibliotheque" element={<Library />} />
               <Route path="/calendrier" element={<CalendarPage />} />
