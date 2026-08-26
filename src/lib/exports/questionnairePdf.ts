@@ -1,4 +1,4 @@
-import { jsPDF } from "jspdf";
+import { jsPDF, AcroFormCheckBox, AcroFormTextField } from "jspdf";
 import { fileName } from "./exportHelpers";
 import { COMPLIANCE_LEVELS } from "@/data/rgpdReferential";
 
@@ -32,11 +32,15 @@ export function printQuestionnairePDF(opts: {
   includeAnswers?: boolean;
   commentLines?: number;
   intro?: string;
+  /** Génère un PDF avec champs de formulaire (cases à cocher + zones de texte) */
+  fillable?: boolean;
 }) {
   const {
     title, companyName, auditTitle, categories,
     includeHelp = true, includeAnswers = false, commentLines = 3, intro,
+    fillable = false,
   } = opts;
+  let fieldIndex = 0;
 
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
   const PW = doc.internal.pageSize.getWidth();
@@ -121,6 +125,7 @@ export function printQuestionnairePDF(opts: {
     y += 5;
 
     for (const q of cat.questions) {
+      fieldIndex += 1;
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9.5);
       const qLines = doc.splitTextToSize(q.text, W - 8);
@@ -178,6 +183,22 @@ export function printQuestionnairePDF(opts: {
         const checked = includeAnswers && q.level === l;
         doc.setDrawColor(90, 90, 90);
         doc.setLineWidth(0.3);
+        if (fillable) {
+          doc.setDrawColor(90, 90, 90);
+          doc.setLineWidth(0.3);
+          doc.rect(bx, cy - 3.2, 3.6, 3.6, "S");
+          const cb = new AcroFormCheckBox() as any;
+          cb.fieldName = `q${fieldIndex}_${l}`;
+          cb.Rect = [bx, cy - 3.2, 3.6, 3.6];
+          cb.appearanceState = checked ? "On" : "Off";
+          cb.maxFontSize = 8;
+          cb.color = "#7a1fa8";
+          (doc as any).addField(cb);
+          doc.setTextColor(...DARK);
+          doc.text(label, bx + 4.9, cy);
+          bx += lw + 10;
+          continue;
+        }
         if (checked) {
           doc.setFillColor(...PURPLE);
           doc.rect(bx, cy - 3, 3.2, 3.2, "FD");
@@ -208,6 +229,19 @@ export function printQuestionnairePDF(opts: {
         doc.setTextColor(...DARK);
         doc.text(answerText, M + 8, cy + 3);
         cy += answerText.length * 3.8 + 3;
+      } else if (fillable) {
+        const h = Math.max(1, commentLines) * 6;
+        const tf = new AcroFormTextField() as any;
+        tf.fieldName = `q${fieldIndex}_commentaire`;
+        tf.Rect = [M + 4, cy, W - 8, h];
+        tf.multiline = true;
+        tf.fontSize = 9;
+        tf.color = "#222222";
+        (doc as any).addField(tf);
+        doc.setDrawColor(190, 190, 190);
+        doc.setLineWidth(0.2);
+        doc.rect(M + 4, cy, W - 8, h, "S");
+        cy += h + 2;
       } else {
         doc.setDrawColor(190, 190, 190);
         doc.setLineWidth(0.2);
