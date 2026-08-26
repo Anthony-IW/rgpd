@@ -33,6 +33,7 @@ export function QuestionnaireExportDialog({
   const [includeHelp, setIncludeHelp] = useState(true);
   const [includeAnswers, setIncludeAnswers] = useState(false);
   const [commentLines, setCommentLines] = useState(3);
+  const [fillable, setFillable] = useState(true);
 
   const toggleQuestion = (id: string) =>
     setSelected((s) => {
