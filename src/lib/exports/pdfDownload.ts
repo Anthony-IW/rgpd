@@ -26,7 +26,7 @@ export async function downloadHtmlPdf(opts: {
   const container = document.createElement("div");
   container.style.cssText = `position:fixed;left:-10000px;top:0;width:${widthPx}px;background:#fff;z-index:-1;`;
   const styleEl = document.createElement("style");
-  styleEl.textContent = styles + `\n.__pdfroot{width:100%;background:#fff;}`;
+  styleEl.textContent = styles + `\n.__pdfroot{width:100%;background:#fff;padding-bottom:14px;}`;
   const content = document.createElement("div");
   content.className = "__pdfroot";
   content.innerHTML = doc.body.innerHTML;
