@@ -37,7 +37,11 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
   const { signOut, user, isClient, isAuditor, isAdmin } = useAuth();
-  const items = isClient && !isAuditor && !isAdmin ? clientItems : auditorItems;
+  const items = isClient && !isAuditor && !isAdmin
+    ? clientItems
+    : isAdmin
+      ? [...auditorItems, { title: "Utilisateurs", url: "/utilisateurs", icon: Users }]
+      : auditorItems;
 
   const isActive = (url: string) => url === "/" ? pathname === "/" : pathname.startsWith(url);
 

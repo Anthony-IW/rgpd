@@ -3,5 +3,8 @@ project_id = "rmrvklncwmsmukafqijx"
 [functions.create-client-account]
 verify_jwt = true
 
+[functions.manage-users]
+verify_jwt = true
+
 [functions.send-deadline-reminders]
 verify_jwt = false
