@@ -23,6 +23,7 @@ import Dpia from "./pages/Dpia";
 import ClientActions from "./pages/ClientActions";
 import ClientAudit from "./pages/ClientAudit";
 import CalendarPage from "./pages/Calendar";
+import Users from "./pages/Users";
 import { AuthProvider } from "./hooks/useAuth";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/dpia" element={<Dpia />} />
               <Route path="/actions" element={<Actions />} />
               <Route path="/bibliotheque" element={<Library />} />
+              <Route path="/utilisateurs" element={<Users />} />
               <Route path="/calendrier" element={<CalendarPage />} />
               <Route path="/portail/actions" element={<ClientActions />} />
               <Route path="/portail/questionnaire" element={<ClientAudit />} />
