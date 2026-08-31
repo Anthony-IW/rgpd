@@ -243,9 +243,8 @@ export default function AuditDetail() {
                               <p className="text-sm font-medium">{q.text}</p>
                               <Badge
                                 variant="outline"
-                                className={isMandatory(q)
-                                  ? "shrink-0 border-destructive/40 text-destructive"
-                                  : "shrink-0 text-muted-foreground"}
+                                className={OBLIGATION_BADGE_CLASS[obligationOf(q).status]}
+                                title={mandatoryNote(q)}
                               >
                                 {mandatoryLabel(q)}
                               </Badge>
