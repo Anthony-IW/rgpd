@@ -256,3 +256,10 @@ export const QUESTION_OBLIGATIONS: Record<string, ObligationInfo> = {
   "ia-06": { status: "conditionnel", note: "Aucune interdiction générale des données personnelles dans les prompts, mais base légale, finalité, minimisation, sécurité, information et encadrement des transferts requis. Données de santé dans un service grand public : à proscrire sauf cadre validé." },
   "ia-07": { status: "conditionnel", note: "Si l'organisme est fournisseur/déployeur d'un système soumis à l'AI Act." },
 };
+
+export const OBLIGATION_BADGE_CLASS: Record<ObligationStatus, string> = {
+  obligatoire: "shrink-0 border-destructive/40 text-destructive",
+  conditionnel: "shrink-0 border-amber-500/40 text-amber-600 dark:text-amber-400",
+  recommande: "shrink-0 border-primary/30 text-primary",
+  non_obligatoire: "shrink-0 text-muted-foreground",
+};
