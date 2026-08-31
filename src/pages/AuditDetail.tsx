@@ -19,8 +19,9 @@ import {
 import { toast } from "sonner";
 import {
   RGPD_REFERENTIAL, COMPLIANCE_LEVELS, AUDIT_STATUS_META,
-  computeCategoryScore, computeGlobalScore, totalQuestions, isMandatory, mandatoryLabel,
+  computeCategoryScore, computeGlobalScore, totalQuestions, obligationOf, mandatoryLabel, mandatoryNote,
 } from "@/data/rgpdReferential";
+import { OBLIGATION_BADGE_CLASS } from "@/data/rgpdObligations";
 import { QUESTION_HELP } from "@/data/rgpdHelp";
 import { generateAuditPDF } from "@/lib/pdfReport";
 import { ExportMenu } from "@/components/ExportMenu";
