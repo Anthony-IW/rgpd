@@ -427,11 +427,14 @@ export function computeCategoryScore(
   for (const q of category.questions) {
     const r = responses[q.id];
     const w = q.weight ?? 1;
-    if (!r || r.level === "a_evaluer" || r.level === "non_applicable") continue;
+    if (!r || r.level === "a_evaluer") continue;
+    // Tout choix autre que "À évaluer" compte comme évalué (y compris "Non applicable")
     answered++;
+    if (r.level === "non_applicable") continue; // exclu du scoring
     total += w * 100;
     score += w * (COMPLIANCE_LEVELS[r.level].score ?? 0);
   }
+
   return { score, total, answered };
 }
 
