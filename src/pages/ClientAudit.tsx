@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ClipboardCheck, HelpCircle } from "lucide-react";
 import {
   RGPD_REFERENTIAL, COMPLIANCE_LEVELS, AUDIT_STATUS_META,
-  computeCategoryScore, computeGlobalScore, totalQuestions,
+  computeCategoryScore, computeGlobalScore, totalQuestions, isMandatory, mandatoryLabel,
 } from "@/data/rgpdReferential";
 import { QUESTION_HELP } from "@/data/rgpdHelp";
 

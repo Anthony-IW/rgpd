@@ -19,7 +19,7 @@ import {
 import { toast } from "sonner";
 import {
   RGPD_REFERENTIAL, COMPLIANCE_LEVELS, AUDIT_STATUS_META,
-  computeCategoryScore, computeGlobalScore, totalQuestions,
+  computeCategoryScore, computeGlobalScore, totalQuestions, isMandatory, mandatoryLabel,
 } from "@/data/rgpdReferential";
 import { QUESTION_HELP } from "@/data/rgpdHelp";
 import { generateAuditPDF } from "@/lib/pdfReport";
