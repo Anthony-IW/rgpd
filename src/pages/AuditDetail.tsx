@@ -238,8 +238,17 @@ export default function AuditDetail() {
                       <div key={q.id} className="rounded-lg border bg-background p-3">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="flex-1 min-w-[240px]">
-                            <div className="flex items-start gap-1.5">
+                            <div className="flex flex-wrap items-start gap-1.5">
                               <p className="text-sm font-medium">{q.text}</p>
+                              <Badge
+                                variant="outline"
+                                className={isMandatory(q)
+                                  ? "shrink-0 border-destructive/40 text-destructive"
+                                  : "shrink-0 text-muted-foreground"}
+                              >
+                                {mandatoryLabel(q)}
+                              </Badge>
+
                               {(q.help || QUESTION_HELP[q.id]) && (
                                 <Popover>
                                   <PopoverTrigger asChild>
