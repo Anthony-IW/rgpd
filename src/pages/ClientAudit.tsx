@@ -11,8 +11,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ClipboardCheck, HelpCircle } from "lucide-react";
 import {
   RGPD_REFERENTIAL, COMPLIANCE_LEVELS, AUDIT_STATUS_META,
-  computeCategoryScore, computeGlobalScore, totalQuestions, isMandatory, mandatoryLabel,
+  computeCategoryScore, computeGlobalScore, totalQuestions, obligationOf, mandatoryLabel, mandatoryNote,
 } from "@/data/rgpdReferential";
+import { OBLIGATION_BADGE_CLASS } from "@/data/rgpdObligations";
 import { QUESTION_HELP } from "@/data/rgpdHelp";
 
 export default function ClientAudit() {
