@@ -9,6 +9,7 @@ export type QuestionnaireQuestion = {
   help?: string;
   level?: string | null;
   comment?: string | null;
+  mandatory?: boolean;
 };
 
 export type QuestionnaireCategory = {
@@ -129,7 +130,12 @@ export function printQuestionnairePDF(opts: {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9.5);
       const qLines = doc.splitTextToSize(q.text, W - 8);
-      const refLines = q.reference ? doc.splitTextToSize(q.reference, W - 8) : [];
+      const metaText = [q.mandatory === false ? "Non obligatoire" : "Obligatoire", q.reference]
+        .filter(Boolean)
+        .join(" - ");
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      const refLines = doc.splitTextToSize(metaText, W - 8);
       doc.setFont("helvetica", "italic");
       doc.setFontSize(8);
       const helpLines = includeHelp && q.help ? doc.splitTextToSize(q.help, W - 8) : [];
@@ -156,7 +162,7 @@ export function printQuestionnairePDF(opts: {
       if (refLines.length) {
         doc.setFont("helvetica", "normal");
         doc.setFontSize(7.5);
-        doc.setTextColor(...PURPLE);
+        doc.setTextColor(...(q.mandatory === false ? GREY : PURPLE));
         doc.text(refLines, M + 4, cy);
         cy += refLines.length * 3.4;
       }

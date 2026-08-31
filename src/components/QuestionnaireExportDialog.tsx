@@ -11,7 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { FileDown } from "lucide-react";
 import { toast } from "sonner";
-import { RGPD_REFERENTIAL } from "@/data/rgpdReferential";
+import { RGPD_REFERENTIAL, isMandatory } from "@/data/rgpdReferential";
 import { QUESTION_HELP } from "@/data/rgpdHelp";
 import { printQuestionnairePDF } from "@/lib/exports/questionnairePdf";
 
@@ -61,6 +61,7 @@ export function QuestionnaireExportDialog({
           text: q.text,
           reference: q.reference,
           help: QUESTION_HELP[q.id],
+          mandatory: isMandatory(q),
           level: withAnswers ? responses[q.id]?.level ?? null : null,
           comment: withAnswers ? responses[q.id]?.comment ?? null : null,
         })),
