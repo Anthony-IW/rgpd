@@ -19,8 +19,9 @@ import {
 import { toast } from "sonner";
 import {
   RGPD_REFERENTIAL, COMPLIANCE_LEVELS, AUDIT_STATUS_META,
-  computeCategoryScore, computeGlobalScore, totalQuestions, isMandatory, mandatoryLabel,
+  computeCategoryScore, computeGlobalScore, totalQuestions, obligationOf, mandatoryLabel, mandatoryNote,
 } from "@/data/rgpdReferential";
+import { OBLIGATION_BADGE_CLASS } from "@/data/rgpdObligations";
 import { QUESTION_HELP } from "@/data/rgpdHelp";
 import { generateAuditPDF } from "@/lib/pdfReport";
 import { ExportMenu } from "@/components/ExportMenu";
@@ -242,9 +243,8 @@ export default function AuditDetail() {
                               <p className="text-sm font-medium">{q.text}</p>
                               <Badge
                                 variant="outline"
-                                className={isMandatory(q)
-                                  ? "shrink-0 border-destructive/40 text-destructive"
-                                  : "shrink-0 text-muted-foreground"}
+                                className={OBLIGATION_BADGE_CLASS[obligationOf(q).status]}
+                                title={mandatoryNote(q)}
                               >
                                 {mandatoryLabel(q)}
                               </Badge>
