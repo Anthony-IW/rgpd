@@ -7,7 +7,19 @@ export type Question = {
   help?: string;
   reference?: string; // article RGPD / CNIL
   weight?: number; // poids pour le scoring (1-3)
+  /** Exigence légale explicite (RGPD/CNIL). Si non défini, déduit de la référence / du poids. */
+  mandatory?: boolean;
 };
+
+/** Une question est "Obligatoire" si elle découle d'une exigence légale (référence RGPD) ou d'un poids fort. */
+export function isMandatory(q: Question): boolean {
+  if (typeof q.mandatory === "boolean") return q.mandatory;
+  return Boolean(q.reference) || (q.weight ?? 1) >= 3;
+}
+
+export const mandatoryLabel = (q: Question) => (isMandatory(q) ? "Obligatoire" : "Non obligatoire");
+
+
 
 export type Category = {
   id: string;
