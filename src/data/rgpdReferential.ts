@@ -11,13 +11,31 @@ export type Question = {
   mandatory?: boolean;
 };
 
-/** Une question est "Obligatoire" si elle découle d'une exigence légale (référence RGPD) ou d'un poids fort. */
-export function isMandatory(q: Question): boolean {
-  if (typeof q.mandatory === "boolean") return q.mandatory;
-  return Boolean(q.reference) || (q.weight ?? 1) >= 3;
+import {
+  QUESTION_OBLIGATIONS,
+  OBLIGATION_LABELS,
+  type ObligationStatus,
+  type ObligationInfo,
+} from "./rgpdObligations";
+
+export type { ObligationStatus, ObligationInfo };
+
+/** Statut d'obligation juridique d'une question (corrigé question par question). */
+export function obligationOf(q: Question): ObligationInfo {
+  const o = QUESTION_OBLIGATIONS[q.id];
+  if (o) return o;
+  if (typeof q.mandatory === "boolean") return { status: q.mandatory ? "obligatoire" : "non_obligatoire" };
+  return { status: q.reference ? "conditionnel" : "recommande" };
 }
 
-export const mandatoryLabel = (q: Question) => (isMandatory(q) ? "Obligatoire" : "Non obligatoire");
+/** Vrai uniquement pour une exigence légale directe (hors "si applicable"). */
+export function isMandatory(q: Question): boolean {
+  return obligationOf(q).status === "obligatoire";
+}
+
+export const mandatoryLabel = (q: Question) => OBLIGATION_LABELS[obligationOf(q).status];
+export const mandatoryNote = (q: Question) => obligationOf(q).note;
+
 
 
 
