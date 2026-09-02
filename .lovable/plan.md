@@ -3,6 +3,14 @@
 Objectif : n'afficher que les questions pertinentes pour l'organisation auditée, selon la formule
 `socle commun + secteur + sous-secteur + modules fonctionnels conditionnels`, sans rien perdre de l'existant.
 
+Le moteur est générique : il s'applique aux 44 secteurs de la liste (BTP, immobilier, e-commerce,
+restauration, IT, associations, collectivités…), pas seulement à la santé. La santé et le cabinet
+dentaire ne sont qu'un exemple de mise en œuvre du même mécanisme. Le questionnaire final d'une
+organisation résulte toujours de la combinaison de son secteur **et** des réponses données dans
+l'assistant sur son fonctionnement réel (site internet, cookies, sous-traitants, salariés, cloud,
+caméras, prospection, IA, paiements, etc.).
+
+
 ## Architecture actuelle (constat)
 
 - Référentiel figé dans le code : `src/data/rgpdReferential.ts` (202 questions, 19 catégories) et
