@@ -224,6 +224,39 @@ export default function Users() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!edit} onOpenChange={(o) => { if (!o) setEdit(null); }}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-md">
+          <DialogHeader><DialogTitle>Modifier le compte</DialogTitle></DialogHeader>
+          {edit && (
+            <div className="space-y-3 py-2">
+              <div><Label>Email</Label><Input type="email" value={edit.email} onChange={(e) => setEdit({ ...edit, email: e.target.value })} /></div>
+              <div><Label>Nom complet</Label><Input value={edit.full_name} onChange={(e) => setEdit({ ...edit, full_name: e.target.value })} /></div>
+              <div>
+                <Label>Rôle</Label>
+                <Select value={edit.role} disabled={edit.user_id === user?.id} onValueChange={(v) => setEdit({ ...edit, role: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Administrateur</SelectItem>
+                    <SelectItem value="auditor">Auditeur</SelectItem>
+                  </SelectContent>
+                </Select>
+                {edit.user_id === user?.id && (
+                  <p className="mt-1 text-xs text-muted-foreground">Vous ne pouvez pas modifier votre propre rôle.</p>
+                )}
+              </div>
+              <div>
+                <Label>Nouveau mot de passe (optionnel)</Label>
+                <Input value={edit.password} onChange={(e) => setEdit({ ...edit, password: e.target.value })} placeholder="Laisser vide pour ne pas changer" />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEdit(null)}>Annuler</Button>
+                <Button onClick={saveEdit} disabled={submitting} className="bg-gradient-primary">{submitting ? "Enregistrement…" : "Enregistrer"}</Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
