@@ -117,6 +117,29 @@ export function DynamicQuestionnaire({
                           )}
                         </div>
 
+                        {!readOnly && (r.level === "non_applicable" || r.level === "ne_sait_pas") && (
+                          <div className="mt-3">
+                            <Textarea
+                              rows={2}
+                              className={`text-xs ${!r.justification ? "border-amber-500/60" : ""}`}
+                              placeholder={
+                                r.level === "non_applicable"
+                                  ? "Justification obligatoire : pourquoi cette exigence ne s'applique pas"
+                                  : "Précisez ce qui reste à vérifier"
+                              }
+                              value={r.justification || ""}
+                              onChange={(e) => onUpdate?.(q, { justification: e.target.value })}
+                            />
+                            {!r.justification && (
+                              <p className="mt-1 text-[11px] text-amber-600 dark:text-amber-400">
+                                {r.level === "non_applicable"
+                                  ? "Une justification est requise pour écarter cette exigence."
+                                  : "Indiquez la vérification à mener."}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
                         {!readOnly && (r.level === "non_conforme" || r.level === "partiel" || r.comment || r.recommendation) && (
                           <div className="mt-3 grid gap-2 md:grid-cols-2">
                             <Textarea placeholder="Constat / commentaire" value={r.comment || ""} rows={2} className="text-xs"
@@ -131,6 +154,7 @@ export function DynamicQuestionnaire({
                         {readOnly && r.comment && (
                           <p className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">{r.comment}</p>
                         )}
+
 
                         {!readOnly && (r.level === "non_conforme" || r.level === "partiel") && (
                           actionQids?.has(q.question_code) ? (

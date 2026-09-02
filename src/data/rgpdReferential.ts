@@ -409,7 +409,9 @@ export const COMPLIANCE_LEVELS = {
   partiel: { label: "Partiellement conforme", color: "warning", score: 50 },
   non_conforme: { label: "Non conforme", color: "destructive", score: 0 },
   non_applicable: { label: "Non applicable", color: "muted", score: null },
+  ne_sait_pas: { label: "Ne sait pas", color: "muted", score: null },
   a_evaluer: { label: "À évaluer", color: "muted", score: null },
+
 } as const;
 
 export const PRIORITY_META = {
@@ -448,7 +450,7 @@ export function computeCategoryScore(
     if (!r || r.level === "a_evaluer") continue;
     // Tout choix autre que "À évaluer" compte comme évalué (y compris "Non applicable")
     answered++;
-    if (r.level === "non_applicable") continue; // exclu du scoring
+    if (r.level === "non_applicable" || r.level === "ne_sait_pas") continue; // exclu du scoring
     total += w * 100;
     score += w * (COMPLIANCE_LEVELS[r.level].score ?? 0);
   }
