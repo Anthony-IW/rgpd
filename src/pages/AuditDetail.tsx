@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ArrowLeft, ClipboardCheck, FileDown, Save, Plus, HelpCircle, Trash2 } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, FileDown, Save, Plus, HelpCircle, Trash2, RefreshCw } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -93,15 +93,30 @@ export default function AuditDetail() {
     if (!company) return;
     setRegenerating(true);
     try {
+      const before = new Set(snapshot.filter((q) => q.included).map((q) => q.question_code));
       await generateAuditScope(id!, company.id);
-      await loadSnapshot(id!);
-      toast.success("Périmètre recalculé");
+      const { data: snap } = await supabase
+        .from("audit_questions_snapshot").select("*").eq("audit_id", id!).order("position");
+      const next = (snap as any as ScopedSnapshotQuestion[]) || [];
+      setSnapshot(next);
+      const { data: meta } = await supabase
+        .from("audit_scope_snapshot").select("*").eq("audit_id", id!).maybeSingle();
+      setScopeMeta(meta);
+      const after = new Set(next.filter((q) => q.included).map((q) => q.question_code));
+      const added = [...after].filter((c) => !before.has(c)).length;
+      const removed = [...before].filter((c) => !after.has(c)).length;
+      toast.success(
+        before.size === 0
+          ? `Audit adapté au profil · ${after.size} questions applicables`
+          : `Audit adapté au profil · +${added} question(s), −${removed} question(s)`,
+      );
     } catch (e: any) {
       toast.error(e.message);
     } finally {
       setRegenerating(false);
     }
   };
+
 
 
   const updateResponse = async (q: any, category: string, patch: any) => {
@@ -245,8 +260,31 @@ export default function AuditDetail() {
         icon={ClipboardCheck}
         actions={
           <>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" disabled={regenerating}>
+                  <RefreshCw className={`mr-2 h-4 w-4 ${regenerating ? "animate-spin" : ""}`} />
+                  {regenerating ? "Adaptation…" : "Adapter l'audit au profil"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Adapter l'audit en fonction du profil ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Le questionnaire sera recalculé à partir du profil actuel de l'entreprise :
+                    les questions devenues applicables seront ajoutées et celles qui ne le sont plus
+                    seront écartées. Les réponses déjà saisies sont conservées.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={regenerateScope}>Adapter</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <QuestionnaireExportDialog auditTitle={audit.title} companyName={company?.name} responses={responses} />
             <ExportMenu label="Rapport" onPdf={exportPdf} onExcel={exportExcel} />
+
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline" className="text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
@@ -298,8 +336,9 @@ export default function AuditDetail() {
             <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 pb-3">
               <CardTitle className="text-base">Périmètre dynamique</CardTitle>
               <Button size="sm" variant="outline" onClick={regenerateScope} disabled={regenerating}>
-                {regenerating ? "Recalcul…" : "Recalculer le périmètre"}
+                {regenerating ? "Adaptation…" : "Adapter l'audit au profil"}
               </Button>
+
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-3">
               <div>
