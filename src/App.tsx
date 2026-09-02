@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Companies from "./pages/Companies";
 import CompanyForm from "./pages/CompanyForm";
 import CompanyDetail from "./pages/CompanyDetail";
+import CompanyProfilePage from "./pages/CompanyProfile";
 import Audits from "./pages/Audits";
 import AuditDetail from "./pages/AuditDetail";
 import Registry from "./pages/Registry";
