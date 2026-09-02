@@ -151,41 +151,127 @@ export type Database = {
           },
         ]
       }
+      audit_questions_snapshot: {
+        Row: {
+          applicability_condition: string | null
+          audit_id: string
+          category_id: string
+          category_name: string | null
+          created_at: string
+          exclusion_reason: string | null
+          help: string | null
+          id: string
+          included: boolean
+          inclusion_reason: string | null
+          legal_reference: string | null
+          legal_status: Database["public"]["Enums"]["legal_status"]
+          position: number
+          question_code: string
+          risk: Database["public"]["Enums"]["risk_level"]
+          text: string
+          weight: number
+        }
+        Insert: {
+          applicability_condition?: string | null
+          audit_id: string
+          category_id: string
+          category_name?: string | null
+          created_at?: string
+          exclusion_reason?: string | null
+          help?: string | null
+          id?: string
+          included?: boolean
+          inclusion_reason?: string | null
+          legal_reference?: string | null
+          legal_status?: Database["public"]["Enums"]["legal_status"]
+          position?: number
+          question_code: string
+          risk?: Database["public"]["Enums"]["risk_level"]
+          text: string
+          weight?: number
+        }
+        Update: {
+          applicability_condition?: string | null
+          audit_id?: string
+          category_id?: string
+          category_name?: string | null
+          created_at?: string
+          exclusion_reason?: string | null
+          help?: string | null
+          id?: string
+          included?: boolean
+          inclusion_reason?: string | null
+          legal_reference?: string | null
+          legal_status?: Database["public"]["Enums"]["legal_status"]
+          position?: number
+          question_code?: string
+          risk?: Database["public"]["Enums"]["risk_level"]
+          text?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_questions_snapshot_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_responses: {
         Row: {
           audit_id: string
           category: string
           comment: string | null
+          cost_estimate: number | null
           created_at: string
+          due_date: string | null
           evidence: string | null
           id: string
+          justification: string | null
           level: Database["public"]["Enums"]["compliance_level"]
+          priority: string | null
           question_id: string
           recommendation: string | null
+          remediation_state: string | null
+          responsible: string | null
           updated_at: string
         }
         Insert: {
           audit_id: string
           category: string
           comment?: string | null
+          cost_estimate?: number | null
           created_at?: string
+          due_date?: string | null
           evidence?: string | null
           id?: string
+          justification?: string | null
           level?: Database["public"]["Enums"]["compliance_level"]
+          priority?: string | null
           question_id: string
           recommendation?: string | null
+          remediation_state?: string | null
+          responsible?: string | null
           updated_at?: string
         }
         Update: {
           audit_id?: string
           category?: string
           comment?: string | null
+          cost_estimate?: number | null
           created_at?: string
+          due_date?: string | null
           evidence?: string | null
           id?: string
+          justification?: string | null
           level?: Database["public"]["Enums"]["compliance_level"]
+          priority?: string | null
           question_id?: string
           recommendation?: string | null
+          remediation_state?: string | null
+          responsible?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -198,19 +284,72 @@ export type Database = {
           },
         ]
       }
+      audit_scope_snapshot: {
+        Row: {
+          audit_id: string
+          created_at: string
+          excluded_modules: Json
+          id: string
+          included_modules: Json
+          profile: Json
+          updated_at: string
+          version_id: string | null
+        }
+        Insert: {
+          audit_id: string
+          created_at?: string
+          excluded_modules?: Json
+          id?: string
+          included_modules?: Json
+          profile?: Json
+          updated_at?: string
+          version_id?: string | null
+        }
+        Update: {
+          audit_id?: string
+          created_at?: string
+          excluded_modules?: Json
+          id?: string
+          included_modules?: Json
+          profile?: Json
+          updated_at?: string
+          version_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_scope_snapshot_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: true
+            referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_scope_snapshot_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaire_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audits: {
         Row: {
           company_id: string
           completed_at: string | null
           conformity_summary: Json | null
+          coverage_score: number | null
           created_at: string
           description: string | null
           end_date: string | null
+          engine_version: string
           executive_summary: string | null
           global_score: number | null
           id: string
+          maturity_score: number | null
           owner_id: string
+          questionnaire_version_id: string | null
           recommendations: string | null
+          regulatory_score: number | null
           scope: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["audit_status"]
@@ -221,14 +360,19 @@ export type Database = {
           company_id: string
           completed_at?: string | null
           conformity_summary?: Json | null
+          coverage_score?: number | null
           created_at?: string
           description?: string | null
           end_date?: string | null
+          engine_version?: string
           executive_summary?: string | null
           global_score?: number | null
           id?: string
+          maturity_score?: number | null
           owner_id: string
+          questionnaire_version_id?: string | null
           recommendations?: string | null
+          regulatory_score?: number | null
           scope?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["audit_status"]
@@ -239,14 +383,19 @@ export type Database = {
           company_id?: string
           completed_at?: string | null
           conformity_summary?: Json | null
+          coverage_score?: number | null
           created_at?: string
           description?: string | null
           end_date?: string | null
+          engine_version?: string
           executive_summary?: string | null
           global_score?: number | null
           id?: string
+          maturity_score?: number | null
           owner_id?: string
+          questionnaire_version_id?: string | null
           recommendations?: string | null
+          regulatory_score?: number | null
           scope?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["audit_status"]
@@ -259,6 +408,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audits_questionnaire_version_id_fkey"
+            columns: ["questionnaire_version_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaire_versions"
             referencedColumns: ["id"]
           },
         ]
@@ -406,6 +562,104 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      company_profile_answers: {
+        Row: {
+          answer: Database["public"]["Enums"]["tristate"]
+          company_id: string
+          created_at: string
+          id: string
+          module_code: string
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          answer?: Database["public"]["Enums"]["tristate"]
+          company_id: string
+          created_at?: string
+          id?: string
+          module_code: string
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answer?: Database["public"]["Enums"]["tristate"]
+          company_id?: string
+          created_at?: string
+          id?: string
+          module_code?: string
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_profile_answers_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_profiles: {
+        Row: {
+          company_id: string
+          completed_at: string | null
+          created_at: string
+          headcount: number | null
+          id: string
+          primary_sector_id: string | null
+          respondent_name: string | null
+          respondent_role: string | null
+          secondary_sector_ids: string[]
+          size: string | null
+          subsector_ids: string[]
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          completed_at?: string | null
+          created_at?: string
+          headcount?: number | null
+          id?: string
+          primary_sector_id?: string | null
+          respondent_name?: string | null
+          respondent_role?: string | null
+          secondary_sector_ids?: string[]
+          size?: string | null
+          subsector_ids?: string[]
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          completed_at?: string | null
+          created_at?: string
+          headcount?: number | null
+          id?: string
+          primary_sector_id?: string | null
+          respondent_name?: string | null
+          respondent_role?: string | null
+          secondary_sector_ids?: string[]
+          size?: string | null
+          subsector_ids?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_profiles_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_profiles_primary_sector_id_fkey"
+            columns: ["primary_sector_id"]
+            isOneToOne: false
+            referencedRelation: "sectors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_users: {
         Row: {
@@ -738,6 +992,86 @@ export type Database = {
           },
         ]
       }
+      functional_modules: {
+        Row: {
+          archived_at: string | null
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          label: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          label: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          label?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      module_activation_questions: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          help: string | null
+          id: string
+          module_id: string
+          position: number
+          step: number
+          text: string
+          unknown_keeps_questions: boolean
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          help?: string | null
+          id?: string
+          module_id: string
+          position?: number
+          step?: number
+          text: string
+          unknown_keeps_questions?: boolean
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          help?: string | null
+          id?: string
+          module_id?: string
+          position?: number
+          step?: number
+          text?: string
+          unknown_keeps_questions?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_activation_questions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "functional_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_log: {
         Row: {
           id: string
@@ -893,6 +1227,280 @@ export type Database = {
         }
         Relationships: []
       }
+      question_modules: {
+        Row: {
+          exclusive: boolean
+          module_id: string
+          question_id: string
+        }
+        Insert: {
+          exclusive?: boolean
+          module_id: string
+          question_id: string
+        }
+        Update: {
+          exclusive?: boolean
+          module_id?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_modules_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "functional_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_modules_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "ref_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_rules: {
+        Row: {
+          conditions: Json
+          created_at: string
+          id: string
+          label: string | null
+          operator: Database["public"]["Enums"]["rule_operator"]
+          question_id: string
+          updated_at: string
+        }
+        Insert: {
+          conditions?: Json
+          created_at?: string
+          id?: string
+          label?: string | null
+          operator?: Database["public"]["Enums"]["rule_operator"]
+          question_id: string
+          updated_at?: string
+        }
+        Update: {
+          conditions?: Json
+          created_at?: string
+          id?: string
+          label?: string | null
+          operator?: Database["public"]["Enums"]["rule_operator"]
+          question_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_rules_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "ref_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_sectors: {
+        Row: {
+          question_id: string
+          sector_id: string
+        }
+        Insert: {
+          question_id: string
+          sector_id: string
+        }
+        Update: {
+          question_id?: string
+          sector_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_sectors_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "ref_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_sectors_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "sectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_subsectors: {
+        Row: {
+          question_id: string
+          subsector_id: string
+        }
+        Insert: {
+          question_id: string
+          subsector_id: string
+        }
+        Update: {
+          question_id?: string
+          subsector_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_subsectors_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "ref_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_subsectors_subsector_id_fkey"
+            columns: ["subsector_id"]
+            isOneToOne: false
+            referencedRelation: "subsectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questionnaire_versions: {
+        Row: {
+          created_at: string
+          id: string
+          label: string | null
+          number: number
+          published_at: string | null
+          published_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          number: number
+          published_at?: string | null
+          published_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          number?: number
+          published_at?: string | null
+          published_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ref_questions: {
+        Row: {
+          applicability_condition: string | null
+          archived_at: string | null
+          category_id: string
+          category_name: string | null
+          code: string
+          created_at: string
+          created_by: string | null
+          explanation: string | null
+          help: string | null
+          id: string
+          is_core: boolean
+          legal_reference: string | null
+          legal_status: Database["public"]["Enums"]["legal_status"]
+          needs_review: boolean
+          position: number
+          recommendations: string[]
+          risk: Database["public"]["Enums"]["risk_level"]
+          text: string
+          updated_at: string
+          updated_by: string | null
+          version_id: string | null
+          weight: number
+        }
+        Insert: {
+          applicability_condition?: string | null
+          archived_at?: string | null
+          category_id: string
+          category_name?: string | null
+          code: string
+          created_at?: string
+          created_by?: string | null
+          explanation?: string | null
+          help?: string | null
+          id?: string
+          is_core?: boolean
+          legal_reference?: string | null
+          legal_status?: Database["public"]["Enums"]["legal_status"]
+          needs_review?: boolean
+          position?: number
+          recommendations?: string[]
+          risk?: Database["public"]["Enums"]["risk_level"]
+          text: string
+          updated_at?: string
+          updated_by?: string | null
+          version_id?: string | null
+          weight?: number
+        }
+        Update: {
+          applicability_condition?: string | null
+          archived_at?: string | null
+          category_id?: string
+          category_name?: string | null
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          explanation?: string | null
+          help?: string | null
+          id?: string
+          is_core?: boolean
+          legal_reference?: string | null
+          legal_status?: Database["public"]["Enums"]["legal_status"]
+          needs_review?: boolean
+          position?: number
+          recommendations?: string[]
+          risk?: Database["public"]["Enums"]["risk_level"]
+          text?: string
+          updated_at?: string
+          updated_by?: string | null
+          version_id?: string | null
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ref_questions_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaire_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sectors: {
+        Row: {
+          archived_at: string | null
+          code: string
+          created_at: string
+          id: string
+          label: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          label: string
+          position?: number
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          label?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subcontractors: {
         Row: {
           company_id: string
@@ -951,6 +1559,47 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subsectors: {
+        Row: {
+          archived_at: string | null
+          code: string
+          created_at: string
+          id: string
+          label: string
+          position: number
+          sector_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          label: string
+          position?: number
+          sector_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          label?: string
+          position?: number
+          sector_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subsectors_sector_id_fkey"
+            columns: ["sector_id"]
+            isOneToOne: false
+            referencedRelation: "sectors"
             referencedColumns: ["id"]
           },
         ]
@@ -1018,6 +1667,14 @@ export type Database = {
         | "interets_vitaux"
         | "mission_interet_public"
         | "interets_legitimes"
+      legal_status:
+        | "OBLIGATOIRE"
+        | "OBLIGATOIRE_SI_APPLICABLE"
+        | "RECOMMANDE"
+        | "NON_OBLIGATOIRE_EN_TANT_QUE_TEL"
+      risk_level: "faible" | "moyen" | "eleve" | "critique"
+      rule_operator: "ALL" | "ANY" | "NOT"
+      tristate: "oui" | "non" | "inconnu"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1171,6 +1828,15 @@ export const Constants = {
         "mission_interet_public",
         "interets_legitimes",
       ],
+      legal_status: [
+        "OBLIGATOIRE",
+        "OBLIGATOIRE_SI_APPLICABLE",
+        "RECOMMANDE",
+        "NON_OBLIGATOIRE_EN_TANT_QUE_TEL",
+      ],
+      risk_level: ["faible", "moyen", "eleve", "critique"],
+      rule_operator: ["ALL", "ANY", "NOT"],
+      tristate: ["oui", "non", "inconnu"],
     },
   },
 } as const
