@@ -409,7 +409,9 @@ export const COMPLIANCE_LEVELS = {
   partiel: { label: "Partiellement conforme", color: "warning", score: 50 },
   non_conforme: { label: "Non conforme", color: "destructive", score: 0 },
   non_applicable: { label: "Non applicable", color: "muted", score: null },
+  ne_sait_pas: { label: "Ne sait pas", color: "muted", score: null },
   a_evaluer: { label: "À évaluer", color: "muted", score: null },
+
 } as const;
 
 export const PRIORITY_META = {
