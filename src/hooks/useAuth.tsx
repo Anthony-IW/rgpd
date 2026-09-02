@@ -53,6 +53,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  const logSession = async (u: User, action: "login" | "logout") => {
+    try {
+      await supabase.from("activity_logs").insert({
+        actor_id: u.id,
+        actor_email: u.email ?? null,
+        action,
+        entity_type: "session",
+      });
+    } catch { /* silencieux */ }
+  };
+
   const loadRoles = async (uid: string) => {
     const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
     setRoles((data ?? []).map((r: any) => r.role));
