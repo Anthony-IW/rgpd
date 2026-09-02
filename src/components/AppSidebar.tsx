@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard, Building2, ClipboardCheck, FileText, ListChecks, BookOpen, LogOut, Shield, ClipboardList, CalendarDays,
-  Handshake, FileQuestion, TriangleAlert, CheckCircle, ShieldCheck, Users as UsersIcon, Library,
+  Handshake, FileQuestion, TriangleAlert, CheckCircle, ShieldCheck, Users as UsersIcon, Library, ScrollText,
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { useAuth } from "@/hooks/useAuth";
@@ -41,7 +41,9 @@ export function AppSidebar() {
   const items = isClient && !isAuditor && !isAdmin
     ? clientItems
     : isAdmin
-      ? [...auditorItems, { title: "Utilisateurs", url: "/utilisateurs", icon: UsersIcon }]
+      ? [...auditorItems,
+          { title: "Utilisateurs", url: "/utilisateurs", icon: UsersIcon },
+          { title: "Logs", url: "/logs", icon: ScrollText }]
       : auditorItems;
 
   const isActive = (url: string) => url === "/" ? pathname === "/" : pathname.startsWith(url);
