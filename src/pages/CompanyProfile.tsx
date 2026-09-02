@@ -12,6 +12,8 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Wand2, ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { AddSectorDialog } from "@/components/AddSectorDialog";
+
 import {
   loadReferential, loadCompanyProfile, saveCompanyProfile, computeScope,
   type Referential, type CompanyProfile as Profile, type Tristate,
@@ -143,7 +145,18 @@ export default function CompanyProfilePage() {
           {step === 1 && (
             <div className="space-y-4">
               <div>
-                <Label>Secteur principal *</Label>
+                <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+                  <Label>Secteur principal *</Label>
+                  <AddSectorDialog
+                    mode="sector"
+                    sectors={ref.sectors}
+                    onCreated={async (id) => {
+                      const r = await loadReferential();
+                      setRef(r);
+                      setProfile((p) => ({ ...p, primary_sector_id: id }));
+                    }}
+                  />
+                </div>
                 <Select
                   value={profile.primary_sector_id ?? ""}
                   onValueChange={(v) => setProfile({ ...profile, primary_sector_id: v })}
@@ -156,6 +169,7 @@ export default function CompanyProfilePage() {
                   </SelectContent>
                 </Select>
               </div>
+
               <div>
                 <Label className="mb-2 block">Activités secondaires</Label>
                 <div className="grid max-h-64 gap-2 overflow-y-auto rounded-lg border p-3 sm:grid-cols-2">
@@ -182,9 +196,26 @@ export default function CompanyProfilePage() {
                     })}
                 </div>
               </div>
-              {subsectors.length > 0 && (
+              {(profile.primary_sector_id || profile.secondary_sector_ids.length > 0) && (
                 <div>
-                  <Label className="mb-2 block">Spécialités</Label>
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <Label>Spécialités</Label>
+                    <AddSectorDialog
+                      mode="subsector"
+                      sectors={ref.sectors}
+                      defaultSectorId={profile.primary_sector_id}
+                      onCreated={async (id) => {
+                        const r = await loadReferential();
+                        setRef(r);
+                        setProfile((p) => ({ ...p, subsector_ids: [...p.subsector_ids, id] }));
+                      }}
+                    />
+                  </div>
+                  {subsectors.length === 0 ? (
+                    <p className="rounded-lg border p-3 text-sm text-muted-foreground">
+                      Aucune spécialité pour les secteurs sélectionnés.
+                    </p>
+                  ) : (
                   <div className="grid gap-2 rounded-lg border p-3 sm:grid-cols-2">
                     {subsectors.map((s) => (
                       <label key={s.id} className="flex items-center gap-2 text-sm">
@@ -201,8 +232,10 @@ export default function CompanyProfilePage() {
                       </label>
                     ))}
                   </div>
+                  )}
                 </div>
               )}
+
             </div>
           )}
 
