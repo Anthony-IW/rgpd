@@ -15,7 +15,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShieldCheck, UserPlus, Trash2, Copy } from "lucide-react";
+import { ShieldCheck, UserPlus, Trash2, Copy, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 type ManagedUser = { user_id: string; email: string | null; full_name: string | null; roles: string[] };
@@ -27,6 +27,7 @@ export default function Users() {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ email: "", full_name: "", password: "", role: "admin" });
   const [created, setCreated] = useState<{ email: string; password: string } | null>(null);
+  const [edit, setEdit] = useState<{ user_id: string; email: string; full_name: string; password: string; role: string } | null>(null);
 
   useEffect(() => { document.title = "Utilisateurs | Audit RGPD"; }, []);
 
@@ -56,6 +57,25 @@ export default function Users() {
       toast.success("Compte créé");
       setCreated({ email: form.email, password: pwd });
       setForm({ email: "", full_name: "", password: "", role: "admin" });
+      load();
+    } catch (e: any) { toast.error(e.message); }
+    setSubmitting(false);
+  };
+
+  const saveEdit = async () => {
+    if (!edit) return;
+    setSubmitting(true);
+    try {
+      await call({
+        action: "update",
+        user_id: edit.user_id,
+        email: edit.email,
+        full_name: edit.full_name,
+        password: edit.password || undefined,
+        role: edit.user_id === user?.id ? undefined : edit.role,
+      });
+      toast.success("Compte mis à jour");
+      setEdit(null);
       load();
     } catch (e: any) { toast.error(e.message); }
     setSubmitting(false);
@@ -153,6 +173,20 @@ export default function Users() {
                     {usr.email && <div className="truncate text-xs text-muted-foreground">{usr.email}</div>}
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      title="Modifier"
+                      onClick={() => setEdit({
+                        user_id: usr.user_id,
+                        email: usr.email ?? "",
+                        full_name: usr.full_name ?? "",
+                        password: "",
+                        role: usr.roles.includes("admin") ? "admin" : "auditor",
+                      })}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
                     {usr.user_id === user?.id ? (
                       <Badge variant="outline">{usr.roles.includes("admin") ? "Administrateur" : "Auditeur"} (vous)</Badge>
                     ) : (
@@ -190,6 +224,39 @@ export default function Users() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!edit} onOpenChange={(o) => { if (!o) setEdit(null); }}>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-md">
+          <DialogHeader><DialogTitle>Modifier le compte</DialogTitle></DialogHeader>
+          {edit && (
+            <div className="space-y-3 py-2">
+              <div><Label>Email</Label><Input type="email" value={edit.email} onChange={(e) => setEdit({ ...edit, email: e.target.value })} /></div>
+              <div><Label>Nom complet</Label><Input value={edit.full_name} onChange={(e) => setEdit({ ...edit, full_name: e.target.value })} /></div>
+              <div>
+                <Label>Rôle</Label>
+                <Select value={edit.role} disabled={edit.user_id === user?.id} onValueChange={(v) => setEdit({ ...edit, role: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Administrateur</SelectItem>
+                    <SelectItem value="auditor">Auditeur</SelectItem>
+                  </SelectContent>
+                </Select>
+                {edit.user_id === user?.id && (
+                  <p className="mt-1 text-xs text-muted-foreground">Vous ne pouvez pas modifier votre propre rôle.</p>
+                )}
+              </div>
+              <div>
+                <Label>Nouveau mot de passe (optionnel)</Label>
+                <Input value={edit.password} onChange={(e) => setEdit({ ...edit, password: e.target.value })} placeholder="Laisser vide pour ne pas changer" />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEdit(null)}>Annuler</Button>
+                <Button onClick={saveEdit} disabled={submitting} className="bg-gradient-primary">{submitting ? "Enregistrement…" : "Enregistrer"}</Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
