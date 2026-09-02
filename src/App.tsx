@@ -59,6 +59,7 @@ const App = () => (
               <Route path="/bibliotheque" element={<Library />} />
               <Route path="/utilisateurs" element={<Users />} />
               <Route path="/referentiel" element={<Referential />} />
+              <Route path="/logs" element={<Logs />} />
               <Route path="/calendrier" element={<CalendarPage />} />
               <Route path="/portail/actions" element={<ClientActions />} />
               <Route path="/portail/questionnaire" element={<ClientAudit />} />
