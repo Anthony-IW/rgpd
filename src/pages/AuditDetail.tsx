@@ -112,10 +112,20 @@ export default function AuditDetail() {
     if (error) toast.error(error.message);
   };
 
+  const updateSnapshotResponse = (q: ScopedSnapshotQuestion, patch: any) =>
+    updateResponse({ id: q.question_code, text: q.text }, q.category_id, patch);
+
   const saveAudit = async (extra: any = {}) => {
     setSaving(true);
     const { error } = await supabase.from("audits").update({
       global_score: globalScore,
+      ...(isDynamic
+        ? {
+            regulatory_score: scopeScores.regulatory,
+            maturity_score: scopeScores.maturity,
+            coverage_score: scopeScores.coverage,
+          }
+        : {}),
       executive_summary: audit.executive_summary,
       recommendations: audit.recommendations,
       ...extra,
@@ -124,6 +134,7 @@ export default function AuditDetail() {
     if (error) return toast.error(error.message);
     toast.success("Audit enregistré");
   };
+
 
   const setStatus = async (status: string) => {
     setAudit({ ...audit, status });
