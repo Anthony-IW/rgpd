@@ -27,6 +27,7 @@ export default function Users() {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ email: "", full_name: "", password: "", role: "admin" });
   const [created, setCreated] = useState<{ email: string; password: string } | null>(null);
+  const [edit, setEdit] = useState<{ user_id: string; email: string; full_name: string; password: string; role: string } | null>(null);
 
   useEffect(() => { document.title = "Utilisateurs | Audit RGPD"; }, []);
 
