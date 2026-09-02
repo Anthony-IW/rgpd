@@ -61,6 +61,25 @@ export default function Users() {
     setSubmitting(false);
   };
 
+  const saveEdit = async () => {
+    if (!edit) return;
+    setSubmitting(true);
+    try {
+      await call({
+        action: "update",
+        user_id: edit.user_id,
+        email: edit.email,
+        full_name: edit.full_name,
+        password: edit.password || undefined,
+        role: edit.user_id === user?.id ? undefined : edit.role,
+      });
+      toast.success("Compte mis à jour");
+      setEdit(null);
+      load();
+    } catch (e: any) { toast.error(e.message); }
+    setSubmitting(false);
+  };
+
   const setRole = async (user_id: string, role: string) => {
     try { await call({ action: "set_role", user_id, role }); toast.success("Rôle mis à jour"); load(); }
     catch (e: any) { toast.error(e.message); }
