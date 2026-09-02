@@ -290,6 +290,10 @@ export default function AuditDetail() {
                 <Progress value={scopeScores.coverage} className="mt-2 h-2" />
                 <p className="mt-1 text-[11px] text-muted-foreground">{scopeScores.answered}/{scopeScores.total} questions évaluées</p>
               </div>
+              <p className="md:col-span-3 rounded-md bg-muted/50 p-2 text-[11px] italic text-muted-foreground">
+                Indicateur d'aide à l'évaluation — ne constitue pas une certification de conformité RGPD.
+              </p>
+
               {scopeMeta && (
                 <div className="md:col-span-3 flex flex-wrap gap-1.5 border-t pt-3">
                   {(scopeMeta.included_modules || []).map((m: any) => (
