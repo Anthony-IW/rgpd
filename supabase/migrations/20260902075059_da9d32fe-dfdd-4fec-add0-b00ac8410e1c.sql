@@ -1,0 +1,1 @@
+ALTER TYPE public.compliance_level ADD VALUE IF NOT EXISTS 'ne_sait_pas';

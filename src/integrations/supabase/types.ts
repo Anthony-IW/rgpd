@@ -1660,6 +1660,7 @@ export type Database = {
         | "non_conforme"
         | "non_applicable"
         | "a_evaluer"
+        | "ne_sait_pas"
       legal_basis:
         | "consentement"
         | "contrat"
@@ -1819,6 +1820,7 @@ export const Constants = {
         "non_conforme",
         "non_applicable",
         "a_evaluer",
+        "ne_sait_pas",
       ],
       legal_basis: [
         "consentement",
