@@ -46,9 +46,7 @@ export function AppSidebar() {
   const items = isClient && !isAuditor && !isAdmin
     ? clientItems
     : isAdmin
-      ? [...auditorItems,
-          { title: "Utilisateurs", url: "/utilisateurs", icon: UsersIcon },
-          { title: "Logs", url: "/logs", icon: ScrollText }]
+      ? [...auditorItems, ...adminItems]
       : auditorItems;
 
   const isActive = (url: string) => url === "/" ? pathname === "/" : pathname.startsWith(url);
