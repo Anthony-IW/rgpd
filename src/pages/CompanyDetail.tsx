@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Building2, ArrowLeft, Edit, Plus, ClipboardCheck, FileText, ListChecks, Trash2,
-  Handshake, FileQuestion, TriangleAlert, CheckCircle, ShieldCheck,
+  Handshake, FileQuestion, TriangleAlert, CheckCircle, ShieldCheck, Wand2,
 } from "lucide-react";
+import { generateAuditScope } from "@/lib/auditEngine";
 import { toast } from "sonner";
 import { AUDIT_STATUS_META } from "@/data/rgpdReferential";
 import { ExportMenu } from "@/components/ExportMenu";
