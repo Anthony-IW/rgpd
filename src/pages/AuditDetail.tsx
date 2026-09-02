@@ -260,8 +260,31 @@ export default function AuditDetail() {
         icon={ClipboardCheck}
         actions={
           <>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" disabled={regenerating}>
+                  <RefreshCw className={`mr-2 h-4 w-4 ${regenerating ? "animate-spin" : ""}`} />
+                  {regenerating ? "Adaptation…" : "Adapter l'audit au profil"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Adapter l'audit en fonction du profil ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Le questionnaire sera recalculé à partir du profil actuel de l'entreprise :
+                    les questions devenues applicables seront ajoutées et celles qui ne le sont plus
+                    seront écartées. Les réponses déjà saisies sont conservées.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={regenerateScope}>Adapter</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <QuestionnaireExportDialog auditTitle={audit.title} companyName={company?.name} responses={responses} />
             <ExportMenu label="Rapport" onPdf={exportPdf} onExcel={exportExcel} />
+
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline" className="text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
