@@ -173,6 +173,20 @@ export default function Users() {
                     {usr.email && <div className="truncate text-xs text-muted-foreground">{usr.email}</div>}
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      title="Modifier"
+                      onClick={() => setEdit({
+                        user_id: usr.user_id,
+                        email: usr.email ?? "",
+                        full_name: usr.full_name ?? "",
+                        password: "",
+                        role: usr.roles.includes("admin") ? "admin" : "auditor",
+                      })}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
                     {usr.user_id === user?.id ? (
                       <Badge variant="outline">{usr.roles.includes("admin") ? "Administrateur" : "Auditeur"} (vous)</Badge>
                     ) : (
