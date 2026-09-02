@@ -27,6 +27,9 @@ import { generateAuditPDF } from "@/lib/pdfReport";
 import { ExportMenu } from "@/components/ExportMenu";
 import { exportAuditXLSX } from "@/lib/exports/excelExport";
 import { QuestionnaireExportDialog } from "@/components/QuestionnaireExportDialog";
+import { DynamicQuestionnaire } from "@/components/DynamicQuestionnaire";
+import { computeScopeScores, type ScopedSnapshotQuestion } from "@/lib/auditScoring";
+import { generateAuditScope } from "@/lib/auditEngine";
 
 export default function AuditDetail() {
   const { id } = useParams();
@@ -38,6 +41,18 @@ export default function AuditDetail() {
   const [saving, setSaving] = useState(false);
   const [actionQids, setActionQids] = useState<Set<string>>(new Set());
   const [actionMap, setActionMap] = useState<Record<string, string>>({});
+  const [snapshot, setSnapshot] = useState<ScopedSnapshotQuestion[]>([]);
+  const [scopeMeta, setScopeMeta] = useState<any>(null);
+  const [regenerating, setRegenerating] = useState(false);
+
+  const loadSnapshot = async (auditId: string) => {
+    const [{ data: snap }, { data: meta }] = await Promise.all([
+      supabase.from("audit_questions_snapshot").select("*").eq("audit_id", auditId).order("position"),
+      supabase.from("audit_scope_snapshot").select("*").eq("audit_id", auditId).maybeSingle(),
+    ]);
+    setSnapshot((snap as any) || []);
+    setScopeMeta(meta);
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -58,12 +73,33 @@ export default function AuditDetail() {
       });
       setActionQids(qids);
       setActionMap(amap);
+      await loadSnapshot(id);
     })();
   }, [id]);
 
-  const globalScore = useMemo(() => computeGlobalScore(responses), [responses]);
-  const totalQ = totalQuestions();
-  const answeredCount = Object.values(responses).filter((r: any) => r.level && r.level !== "a_evaluer").length;
+  const isDynamic = snapshot.length > 0;
+  const scopeScores = useMemo(() => computeScopeScores(snapshot, responses), [snapshot, responses]);
+  const staticScore = useMemo(() => computeGlobalScore(responses), [responses]);
+  const globalScore = isDynamic ? scopeScores.global : staticScore;
+  const totalQ = isDynamic ? scopeScores.total : totalQuestions();
+  const answeredCount = isDynamic
+    ? scopeScores.answered
+    : Object.values(responses).filter((r: any) => r.level && r.level !== "a_evaluer").length;
+
+  const regenerateScope = async () => {
+    if (!company) return;
+    setRegenerating(true);
+    try {
+      await generateAuditScope(id!, company.id);
+      await loadSnapshot(id!);
+      toast.success("Périmètre recalculé");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
 
   const updateResponse = async (q: any, category: string, patch: any) => {
     const existing = responses[q.id];
@@ -76,10 +112,20 @@ export default function AuditDetail() {
     if (error) toast.error(error.message);
   };
 
+  const updateSnapshotResponse = (q: ScopedSnapshotQuestion, patch: any) =>
+    updateResponse({ id: q.question_code, text: q.text }, q.category_id, patch);
+
   const saveAudit = async (extra: any = {}) => {
     setSaving(true);
     const { error } = await supabase.from("audits").update({
       global_score: globalScore,
+      ...(isDynamic
+        ? {
+            regulatory_score: scopeScores.regulatory,
+            maturity_score: scopeScores.maturity,
+            coverage_score: scopeScores.coverage,
+          }
+        : {}),
       executive_summary: audit.executive_summary,
       recommendations: audit.recommendations,
       ...extra,
@@ -88,6 +134,7 @@ export default function AuditDetail() {
     if (error) return toast.error(error.message);
     toast.success("Audit enregistré");
   };
+
 
   const setStatus = async (status: string) => {
     setAudit({ ...audit, status });
@@ -213,7 +260,63 @@ export default function AuditDetail() {
         </CardContent>
       </Card>
 
+      {isDynamic ? (
+        <>
+          <Card className="mb-6 border-2">
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 pb-3">
+              <CardTitle className="text-base">Périmètre dynamique</CardTitle>
+              <Button size="sm" variant="outline" onClick={regenerateScope} disabled={regenerating}>
+                {regenerating ? "Recalcul…" : "Recalculer le périmètre"}
+              </Button>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-3">
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">Score réglementaire</p>
+                <p className="text-2xl font-bold">{scopeScores.regulatory}%</p>
+                <Progress value={scopeScores.regulatory} className="mt-2 h-2" />
+                <p className="mt-1 text-[11px] text-muted-foreground">Questions obligatoires applicables</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">Score de maturité</p>
+                <p className="text-2xl font-bold">{scopeScores.maturity}%</p>
+                <Progress value={scopeScores.maturity} className="mt-2 h-2" />
+                <p className="mt-1 text-[11px] text-muted-foreground">Bonnes pratiques recommandées</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">Couverture</p>
+                <p className="text-2xl font-bold">{scopeScores.coverage}%</p>
+                <Progress value={scopeScores.coverage} className="mt-2 h-2" />
+                <p className="mt-1 text-[11px] text-muted-foreground">{scopeScores.answered}/{scopeScores.total} questions évaluées</p>
+              </div>
+              {scopeMeta && (
+                <div className="md:col-span-3 flex flex-wrap gap-1.5 border-t pt-3">
+                  {(scopeMeta.included_modules || []).map((m: any) => (
+                    <Badge key={m.code} variant="outline" className="border-primary/30 bg-primary/5 text-xs" title={m.reason}>
+                      {m.label}
+                    </Badge>
+                  ))}
+                  {(scopeMeta.excluded_modules || []).map((m: any) => (
+                    <Badge key={m.code} variant="outline" className="text-xs text-muted-foreground line-through" title={m.reason}>
+                      {m.label}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <DynamicQuestionnaire
+            questions={snapshot}
+            responses={responses}
+            actionQids={actionQids}
+            onUpdate={updateSnapshotResponse}
+            onCreateAction={(q) => createActionFromQuestion({ id: q.question_code, text: q.text }, q.category_id)}
+            onDeleteAction={deleteActionFromQuestion}
+          />
+        </>
+      ) : (
       <Accordion type="multiple" className="space-y-3">
+
         {RGPD_REFERENTIAL.map((cat) => {
           const s = computeCategoryScore(cat, responses);
           const pct = s.total === 0 ? 0 : Math.round((s.score / s.total) * 100);
@@ -305,6 +408,8 @@ export default function AuditDetail() {
           );
         })}
       </Accordion>
+      )}
+
 
       <Card className="mt-6 border-2">
         <CardHeader><CardTitle>Synthèse exécutive</CardTitle></CardHeader>
