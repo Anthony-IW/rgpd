@@ -25,7 +25,8 @@ import { OBLIGATION_BADGE_CLASS } from "@/data/rgpdObligations";
 import { QUESTION_HELP } from "@/data/rgpdHelp";
 import { generateAuditPDF } from "@/lib/pdfReport";
 import { ExportMenu } from "@/components/ExportMenu";
-import { exportAuditXLSX } from "@/lib/exports/excelExport";
+import { exportAuditXLSX, exportScopeAuditXLSX } from "@/lib/exports/excelExport";
+import { generateScopeAuditPDF } from "@/lib/exports/scopeReport";
 import { QuestionnaireExportDialog } from "@/components/QuestionnaireExportDialog";
 import { DynamicQuestionnaire } from "@/components/DynamicQuestionnaire";
 import { computeScopeScores, type ScopedSnapshotQuestion } from "@/lib/auditScoring";
@@ -182,13 +183,40 @@ export default function AuditDetail() {
     toast.success("Action corrective supprimée");
   };
 
+  const loadScopeLabels = async () => {
+    const profile: any = scopeMeta?.profile || {};
+    const sectorIds = [profile.primary_sector_id, ...(profile.secondary_sector_ids || [])].filter(Boolean);
+    const subIds: string[] = profile.subsector_ids || [];
+    const [{ data: secs }, { data: subs }] = await Promise.all([
+      sectorIds.length
+        ? supabase.from("sectors").select("id,label").in("id", sectorIds)
+        : Promise.resolve({ data: [] as any[] }),
+      subIds.length
+        ? supabase.from("subsectors").select("id,label").in("id", subIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+    return {
+      sectorLabels: (secs || []).map((s: any) => s.label),
+      subsectorLabels: (subs || []).map((s: any) => s.label),
+    };
+  };
+
   const exportPdf = async () => {
     if (!audit || !company) return;
+    if (isDynamic) {
+      const labels = await loadScopeLabels();
+      await generateScopeAuditPDF({ audit, company, responses, snapshot, scopeMeta, ...labels });
+      return;
+    }
     await generateAuditPDF({ audit, company, responses, globalScore });
   };
 
   const exportExcel = async () => {
     if (!audit || !company) return;
+    if (isDynamic) {
+      exportScopeAuditXLSX({ audit, company, snapshot, responses, scopeMeta, scores: scopeScores });
+      return;
+    }
     const [{ data: actions }, { data: processing }] = await Promise.all([
       supabase.from("action_plans").select("*").eq("company_id", company.id),
       supabase.from("processing_records").select("*").eq("company_id", company.id),
