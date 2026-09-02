@@ -3,6 +3,14 @@
 Objectif : n'afficher que les questions pertinentes pour l'organisation auditée, selon la formule
 `socle commun + secteur + sous-secteur + modules fonctionnels conditionnels`, sans rien perdre de l'existant.
 
+Le moteur est générique : il s'applique aux 44 secteurs de la liste (BTP, immobilier, e-commerce,
+restauration, IT, associations, collectivités…), pas seulement à la santé. La santé et le cabinet
+dentaire ne sont qu'un exemple de mise en œuvre du même mécanisme. Le questionnaire final d'une
+organisation résulte toujours de la combinaison de son secteur **et** des réponses données dans
+l'assistant sur son fonctionnement réel (site internet, cookies, sous-traitants, salariés, cloud,
+caméras, prospection, IA, paiements, etc.).
+
+
 ## Architecture actuelle (constat)
 
 - Référentiel figé dans le code : `src/data/rgpdReferential.ts` (202 questions, 19 catégories) et
@@ -70,10 +78,12 @@ Espace admin : secteurs, sous-secteurs, modules, questions (création, édition,
 duplication, versionnement), constructeur visuel de règles, aperçu pour un profil donné,
 contrôles de cohérence, import/export JSON/CSV, publication de version.
 
-### Phase 6 — Rapports, section sectorielle santé, tests
-Rapports distinguant hors périmètre / contrôlé / conforme, structure d'accueil `sante-01`…`sante-30`
-et `sec-31` (test de restauration des sauvegardes) prête à recevoir les formulations juridiques,
-tests d'intégration et vérification de non-régression.
+### Phase 6 — Rapports, contenus sectoriels, tests
+Rapports distinguant hors périmètre / contrôlé / conforme. Les 44 secteurs disposent d'un bloc
+sectoriel administrable (vide au départ, alimentable sans code) ; la santé/cabinet dentaire sert de
+premier exemple complet avec les identifiants stables `sante-01`…`sante-30` et `sec-31`
+(test de restauration des sauvegardes). Tests d'intégration et vérification de non-régression.
+
 
 ## Points d'attention
 
