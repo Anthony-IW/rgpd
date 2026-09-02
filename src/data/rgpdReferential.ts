@@ -450,7 +450,7 @@ export function computeCategoryScore(
     if (!r || r.level === "a_evaluer") continue;
     // Tout choix autre que "À évaluer" compte comme évalué (y compris "Non applicable")
     answered++;
-    if (r.level === "non_applicable") continue; // exclu du scoring
+    if (r.level === "non_applicable" || r.level === "ne_sait_pas") continue; // exclu du scoring
     total += w * 100;
     score += w * (COMPLIANCE_LEVELS[r.level].score ?? 0);
   }
