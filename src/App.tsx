@@ -26,6 +26,7 @@ import ClientAudit from "./pages/ClientAudit";
 import CalendarPage from "./pages/Calendar";
 import Users from "./pages/Users";
 import Referential from "./pages/Referential";
+import Logs from "./pages/Logs";
 import { AuthProvider } from "./hooks/useAuth";
 
 const queryClient = new QueryClient();
