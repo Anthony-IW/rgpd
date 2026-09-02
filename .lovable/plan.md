@@ -78,10 +78,12 @@ Espace admin : secteurs, sous-secteurs, modules, questions (création, édition,
 duplication, versionnement), constructeur visuel de règles, aperçu pour un profil donné,
 contrôles de cohérence, import/export JSON/CSV, publication de version.
 
-### Phase 6 — Rapports, section sectorielle santé, tests
-Rapports distinguant hors périmètre / contrôlé / conforme, structure d'accueil `sante-01`…`sante-30`
-et `sec-31` (test de restauration des sauvegardes) prête à recevoir les formulations juridiques,
-tests d'intégration et vérification de non-régression.
+### Phase 6 — Rapports, contenus sectoriels, tests
+Rapports distinguant hors périmètre / contrôlé / conforme. Les 44 secteurs disposent d'un bloc
+sectoriel administrable (vide au départ, alimentable sans code) ; la santé/cabinet dentaire sert de
+premier exemple complet avec les identifiants stables `sante-01`…`sante-30` et `sec-31`
+(test de restauration des sauvegardes). Tests d'intégration et vérification de non-régression.
+
 
 ## Points d'attention
 
