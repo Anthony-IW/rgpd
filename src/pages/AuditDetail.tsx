@@ -30,6 +30,8 @@ import { generateScopeAuditPDF } from "@/lib/exports/scopeReport";
 import { QuestionnaireExportDialog } from "@/components/QuestionnaireExportDialog";
 import { DynamicQuestionnaire } from "@/components/DynamicQuestionnaire";
 import { computeScopeScores, type ScopedSnapshotQuestion } from "@/lib/auditScoring";
+import { AddCustomQuestionDialog } from "@/components/AddCustomQuestionDialog";
+
 import { generateAuditScope } from "@/lib/auditEngine";
 
 export default function AuditDetail() {
@@ -339,6 +341,16 @@ export default function AuditDetail() {
             </CardContent>
           </Card>
 
+          <div className="mb-3 flex justify-end">
+            <AddCustomQuestionDialog
+              auditId={id!}
+              categories={Array.from(
+                new Map(snapshot.map((q) => [q.category_id, q.category_name || q.category_id])).entries(),
+              ).map(([cid, name]) => ({ id: cid, name }))}
+              onAdded={() => loadSnapshot(id!)}
+            />
+          </div>
+
           <DynamicQuestionnaire
             questions={snapshot}
             responses={responses}
@@ -347,6 +359,7 @@ export default function AuditDetail() {
             onCreateAction={(q) => createActionFromQuestion({ id: q.question_code, text: q.text }, q.category_id)}
             onDeleteAction={deleteActionFromQuestion}
           />
+
         </>
       ) : (
       <Accordion type="multiple" className="space-y-3">
