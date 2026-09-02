@@ -15,7 +15,7 @@ import {
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShieldCheck, UserPlus, Trash2, Copy } from "lucide-react";
+import { ShieldCheck, UserPlus, Trash2, Copy, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
 type ManagedUser = { user_id: string; email: string | null; full_name: string | null; roles: string[] };
