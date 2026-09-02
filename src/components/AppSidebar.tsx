@@ -24,7 +24,12 @@ const auditorItems = [
   { title: "Plan d'actions", url: "/actions", icon: ListChecks },
   { title: "Calendrier", url: "/calendrier", icon: CalendarDays },
   { title: "Bibliothèque", url: "/bibliotheque", icon: BookOpen },
+];
+
+const adminItems = [
   { title: "Référentiel", url: "/referentiel", icon: Library },
+  { title: "Utilisateurs", url: "/utilisateurs", icon: UsersIcon },
+  { title: "Logs", url: "/logs", icon: ScrollText },
 ];
 
 const clientItems = [
