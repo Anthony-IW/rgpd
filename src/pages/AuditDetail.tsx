@@ -93,15 +93,30 @@ export default function AuditDetail() {
     if (!company) return;
     setRegenerating(true);
     try {
+      const before = new Set(snapshot.filter((q) => q.included).map((q) => q.question_code));
       await generateAuditScope(id!, company.id);
-      await loadSnapshot(id!);
-      toast.success("Périmètre recalculé");
+      const { data: snap } = await supabase
+        .from("audit_questions_snapshot").select("*").eq("audit_id", id!).order("position");
+      const next = (snap as any as ScopedSnapshotQuestion[]) || [];
+      setSnapshot(next);
+      const { data: meta } = await supabase
+        .from("audit_scope_snapshot").select("*").eq("audit_id", id!).maybeSingle();
+      setScopeMeta(meta);
+      const after = new Set(next.filter((q) => q.included).map((q) => q.question_code));
+      const added = [...after].filter((c) => !before.has(c)).length;
+      const removed = [...before].filter((c) => !after.has(c)).length;
+      toast.success(
+        before.size === 0
+          ? `Audit adapté au profil · ${after.size} questions applicables`
+          : `Audit adapté au profil · +${added} question(s), −${removed} question(s)`,
+      );
     } catch (e: any) {
       toast.error(e.message);
     } finally {
       setRegenerating(false);
     }
   };
+
 
 
   const updateResponse = async (q: any, category: string, patch: any) => {
