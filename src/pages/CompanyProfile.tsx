@@ -143,7 +143,18 @@ export default function CompanyProfilePage() {
           {step === 1 && (
             <div className="space-y-4">
               <div>
-                <Label>Secteur principal *</Label>
+                <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+                  <Label>Secteur principal *</Label>
+                  <AddSectorDialog
+                    mode="sector"
+                    sectors={ref.sectors}
+                    onCreated={async (id) => {
+                      const r = await loadReferential();
+                      setRef(r);
+                      setProfile((p) => ({ ...p, primary_sector_id: id }));
+                    }}
+                  />
+                </div>
                 <Select
                   value={profile.primary_sector_id ?? ""}
                   onValueChange={(v) => setProfile({ ...profile, primary_sector_id: v })}
@@ -156,6 +167,7 @@ export default function CompanyProfilePage() {
                   </SelectContent>
                 </Select>
               </div>
+
               <div>
                 <Label className="mb-2 block">Activités secondaires</Label>
                 <div className="grid max-h-64 gap-2 overflow-y-auto rounded-lg border p-3 sm:grid-cols-2">
