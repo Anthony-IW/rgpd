@@ -108,6 +108,8 @@ export default function AuditDetail() {
     const { error } = await supabase.from("audit_responses").upsert({
       audit_id: id, question_id: q.id, category, level: next.level,
       comment: next.comment ?? null, evidence: next.evidence ?? null, recommendation: next.recommendation ?? null,
+      justification: next.justification ?? null,
+
     }, { onConflict: "audit_id,question_id" });
     if (error) toast.error(error.message);
   };
