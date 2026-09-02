@@ -66,6 +66,36 @@ Deno.serve(async (req) => {
       return json({ ok: true, user_id: userId, existed: !!found });
     }
 
+    if (action === "update") {
+      const { user_id, email, full_name, password, role } = body ?? {};
+      if (!user_id) return json({ error: "user_id requis" }, 400);
+      if (password && String(password).length < 8) return json({ error: "Mot de passe : 8 caractères minimum" }, 400);
+
+      const attrs: Record<string, unknown> = {};
+      if (email) attrs.email = email;
+      if (password) attrs.password = password;
+      if (full_name !== undefined) attrs.user_metadata = { full_name: full_name || email };
+      if (Object.keys(attrs).length) {
+        const { error: uErr } = await admin.auth.admin.updateUserById(user_id, attrs as any);
+        if (uErr) return json({ error: uErr.message }, 400);
+      }
+
+      const profilePatch: Record<string, unknown> = {};
+      if (email) profilePatch.email = email;
+      if (full_name !== undefined) profilePatch.full_name = full_name || null;
+      if (Object.keys(profilePatch).length) {
+        await admin.from("profiles").update(profilePatch).eq("id", user_id);
+      }
+
+      if (role && ["admin", "auditor"].includes(role)) {
+        if (user_id === u.user.id) return json({ error: "Vous ne pouvez pas modifier votre propre rôle" }, 400);
+        await admin.from("user_roles").delete().eq("user_id", user_id);
+        const { error: rErr } = await admin.from("user_roles").insert({ user_id, role });
+        if (rErr) return json({ error: rErr.message }, 400);
+      }
+      return json({ ok: true });
+    }
+
     if (action === "delete") {
       const { user_id } = body ?? {};
       if (!user_id) return json({ error: "user_id requis" }, 400);
