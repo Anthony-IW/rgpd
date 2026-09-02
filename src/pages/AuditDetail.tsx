@@ -260,7 +260,63 @@ export default function AuditDetail() {
         </CardContent>
       </Card>
 
+      {isDynamic ? (
+        <>
+          <Card className="mb-6 border-2">
+            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 pb-3">
+              <CardTitle className="text-base">Périmètre dynamique</CardTitle>
+              <Button size="sm" variant="outline" onClick={regenerateScope} disabled={regenerating}>
+                {regenerating ? "Recalcul…" : "Recalculer le périmètre"}
+              </Button>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-3">
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">Score réglementaire</p>
+                <p className="text-2xl font-bold">{scopeScores.regulatory}%</p>
+                <Progress value={scopeScores.regulatory} className="mt-2 h-2" />
+                <p className="mt-1 text-[11px] text-muted-foreground">Questions obligatoires applicables</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">Score de maturité</p>
+                <p className="text-2xl font-bold">{scopeScores.maturity}%</p>
+                <Progress value={scopeScores.maturity} className="mt-2 h-2" />
+                <p className="mt-1 text-[11px] text-muted-foreground">Bonnes pratiques recommandées</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase text-muted-foreground">Couverture</p>
+                <p className="text-2xl font-bold">{scopeScores.coverage}%</p>
+                <Progress value={scopeScores.coverage} className="mt-2 h-2" />
+                <p className="mt-1 text-[11px] text-muted-foreground">{scopeScores.answered}/{scopeScores.total} questions évaluées</p>
+              </div>
+              {scopeMeta && (
+                <div className="md:col-span-3 flex flex-wrap gap-1.5 border-t pt-3">
+                  {(scopeMeta.included_modules || []).map((m: any) => (
+                    <Badge key={m.code} variant="outline" className="border-primary/30 bg-primary/5 text-xs" title={m.reason}>
+                      {m.label}
+                    </Badge>
+                  ))}
+                  {(scopeMeta.excluded_modules || []).map((m: any) => (
+                    <Badge key={m.code} variant="outline" className="text-xs text-muted-foreground line-through" title={m.reason}>
+                      {m.label}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <DynamicQuestionnaire
+            questions={snapshot}
+            responses={responses}
+            actionQids={actionQids}
+            onUpdate={updateSnapshotResponse}
+            onCreateAction={(q) => createActionFromQuestion({ id: q.question_code, text: q.text }, q.category_id)}
+            onDeleteAction={deleteActionFromQuestion}
+          />
+        </>
+      ) : (
       <Accordion type="multiple" className="space-y-3">
+
         {RGPD_REFERENTIAL.map((cat) => {
           const s = computeCategoryScore(cat, responses);
           const pct = s.total === 0 ? 0 : Math.round((s.score / s.total) * 100);
