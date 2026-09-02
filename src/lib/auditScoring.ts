@@ -41,8 +41,10 @@ const VALUE: Record<string, number | null> = {
   partiel: 0.5,
   non_conforme: 0,
   non_applicable: null,
+  ne_sait_pas: null,
   a_evaluer: null,
 };
+
 
 const isRegulatory = (s: LegalStatus) =>
   s === "OBLIGATOIRE" || s === "OBLIGATOIRE_SI_APPLICABLE";
