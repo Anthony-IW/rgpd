@@ -336,8 +336,9 @@ export default function AuditDetail() {
             <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 pb-3">
               <CardTitle className="text-base">Périmètre dynamique</CardTitle>
               <Button size="sm" variant="outline" onClick={regenerateScope} disabled={regenerating}>
-                {regenerating ? "Recalcul…" : "Recalculer le périmètre"}
+                {regenerating ? "Adaptation…" : "Adapter l'audit au profil"}
               </Button>
+
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-3">
               <div>
