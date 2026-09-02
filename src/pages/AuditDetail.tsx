@@ -408,6 +408,8 @@ export default function AuditDetail() {
           );
         })}
       </Accordion>
+      )}
+
 
       <Card className="mt-6 border-2">
         <CardHeader><CardTitle>Synthèse exécutive</CardTitle></CardHeader>
