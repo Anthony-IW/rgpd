@@ -33,12 +33,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
       setLoading(false);
       if (s?.user) {
         setTimeout(() => loadRoles(s.user!.id), 0);
+        if (event === "SIGNED_IN") setTimeout(() => logSession(s.user!, "login"), 0);
       } else {
         setRoles([]);
       }
