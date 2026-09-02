@@ -1,81 +1,85 @@
-# Déploiement de l'app RGPD sur rgpd.informatique-web.pro (o2switch)
+# Moteur dynamique d'audit RGPD multisectoriel
 
-## D'abord : quel dossier utiliser ? (ta question)
+Objectif : n'afficher que les questions pertinentes pour l'organisation auditée, selon la formule
+`socle commun + secteur + sous-secteur + modules fonctionnels conditionnels`, sans rien perdre de l'existant.
 
-Tu as maintenant **deux dossiers** côté o2switch. Voici ce qu'ils sont et lequel choisir :
+## Architecture actuelle (constat)
 
-1. **Le dossier « Setup Node.js App » (créé automatiquement quand tu as activé Node.js)** — c'est un environnement pour faire tourner une **application Node serveur** (Express, etc.) via Passenger. **Ne l'utilise pas pour ce site.** Une app Vite/React est un site **statique** : ce sont des fichiers HTML/CSS/JS à servir par Apache, pas un programme Node à exécuter. Ce dossier contient des fichiers modèles (`app.js`…) qui ne sont pas les tiens.
-   → Action : **supprime cette application Node** dans cPanel → *Setup Node.js App* → (l'icône corbeille sur l'app). Cela retire aussi les règles Passenger/`.htaccess` qu'elle a ajoutées et qui viendraient parasiter le sous-domaine.
+- Référentiel figé dans le code : `src/data/rgpdReferential.ts` (202 questions, 19 catégories) et
+  `src/data/rgpdObligations.ts` (statut juridique + note par question).
+- Réponses en base : `audit_responses` (audit_id, question_id, category, level, comment, evidence, recommendation).
+- Audits : `audits` (company_id, status, global_score, conformity_summary…).
+- Scoring calculé côté client à partir du référentiel figé.
 
-2. **Le dossier où tu as importé les fichiers GitHub** — c'est le **code source** du projet (les `.tsx`, `.ts`, `package.json`…). Important : le code source **ne s'affiche pas tel quel** dans un navigateur. Il faut d'abord le **compiler** (`npm install` + `npm run build`) pour obtenir un dossier `dist/` contenant les fichiers prêts à servir. On ne sert donc **pas** ce dossier directement.
+## Schéma de migration proposé
 
-3. **Le dossier à servir = la racine du sous-domaine** (le *Document Root*). C'est ce dossier qui s'affiche à l'URL `rgpd.informatique-web.pro`.
-   - Dans cPanel → **Sous-domaines** → clique sur le sous-domaine `rgpd` → note le **Document Root** indiqué (en général `public_html/rgpd`).
-   - C'est **dans ce dossier** que doivent atterrir les fichiers compilés (`dist/*` + `.htaccess`).
+Nouvelles tables (toutes avec `created_at`, `updated_at`, `archived_at`, GRANT + RLS) :
 
-Résumé de la décision :
-```text
-Dossier Node.js App        → supprimer (inutile, conflit)
-Dossier source GitHub       → sert seulement à compiler (pas servi)
-Document Root du sous-domaine (public_html/rgpd)  → cible du déploiement (servi)
-```
+- `sectors` (code, label, ordre) — les 44 secteurs de la liste.
+- `subsectors` (sector_id, code, label) — dont `CABINET_DENTAIRE`.
+- `functional_modules` (code, label, description) — les 35 modules.
+- `module_activation_questions` (module_id, texte, étape de l'assistant, auto_activation).
+- `questionnaire_versions` (numéro, publiée_le, publiée_par).
+- `ref_questions` (code stable, texte, aide, référence juridique, statut juridique enum,
+  condition d'application, niveau de risque, recommandations, poids, catégorie, version).
+- `question_sectors`, `question_subsectors`, `question_modules` (liaisons multiples).
+- `question_rules` (question_id, opérateur ALL/ANY/NOT, conditions JSONB).
+- `company_profiles` + `company_profile_answers` (réponses de l'assistant, secteur principal,
+  secteurs secondaires, sous-secteur, modules activés).
+- `audit_scope_snapshot` (profil figé + modules inclus/exclus + raisons).
+- `audit_questions_snapshot` (questions retenues, `inclusion_reason`, statut juridique figé).
+- Colonnes ajoutées à `audit_responses` : `justification`, `owner`, `due_date`, `cost_estimate`,
+  `priority`, `remediation_state`.
+- Colonnes ajoutées à `audits` : `engine_version` (`legacy` | `dynamic`), `questionnaire_version_id`,
+  `regulatory_score`, `maturity_score`, `coverage_score`.
 
-## Principe général
-L'application est un **SPA React/Vite** (frontend statique) publié sur Lovable à `rgpd.lovable.app`. Le backend (base, auth, edge functions) reste sur **Lovable Cloud** — rien à installer côté o2switch : le frontend interrogera toujours le backend Lovable via HTTPS. On ne met sur o2switch que les fichiers statiques issus du build (`dist/`).
+Enums : `legal_status` (`OBLIGATOIRE`, `OBLIGATOIRE_SI_APPLICABLE`, `RECOMMANDE`,
+`NON_OBLIGATOIRE_EN_TANT_QUE_TEL`), `risk_level` (faible/moyen/élevé/critique),
+extension du niveau de réponse avec `PARTIEL` et `NE_SAIT_PAS` si absent.
 
-Choix par défaut : **CI/CD GitHub Actions** qui compile puis envoie `dist/` sur o2switch par FTP. À chaque `git push` sur `main`, le site se met à jour tout seul.
+Migration des 202 questions : import depuis `rgpdReferential.ts` + `rgpdObligations.ts` vers
+`ref_questions` (version 1), rattachement au `SOCLE_COMMUN`, conversion des statuts uniquement
+lorsque la correspondance est certaine, les cas ambigus étant marqués `needs_review = true`.
+Aucun audit existant n'est modifié : ils restent en `engine_version = legacy`.
 
-## Ce que j'ajoute au dépôt (fichiers de configuration)
+## Phases de livraison
 
-1. **`public/.htaccess`** — routing SPA sous Apache (o2switch = Apache/cPanel).
-   - `RewriteEngine On` : toute URL qui n'est pas un fichier/répertoire existant est renvoyée vers `index.html` (pour que `/audit/123`, `/portail/actions`, refresh de page… fonctionnent sans 404).
-   - Mise en cache des assets `assets/*` + `favicon`, en-têtes de sécurité de base.
-   - Vite copie automatiquement `public/.htaccess` à la racine de `dist/` lors du build.
+### Phase 1 — Fondations base de données
+Tables, enums, RLS, GRANT, seed des 44 secteurs, 35 modules et questions d'activation,
+import des 202 questions en version 1.
 
-2. **`.github/workflows/deploy-o2switch.yml`** — pipeline GitHub Actions.
-   - Déclenché sur `push` vers `main`.
-   - Étapes : `actions/checkout` → `setup-node` (20) → `npm ci` → `npm run build` → déploiement FTP du dossier `dist/` vers le Document Root o2switch via une action type `SamKirkland/FTP-Deploy-Action`.
-   - Identifiants FTP depuis des **secrets GitHub** (`O2SWITCH_FTP_SERVER`, `O2SWITCH_FTP_USERNAME`, `O2SWITCH_FTP_PASSWORD`, `O2SWITCH_FTP_PORT`), jamais en clair.
+### Phase 2 — Moteur d'éligibilité
+`src/lib/audit-engine/` : évaluation des règles ALL/ANY/NOT, calcul du périmètre,
+`inclusion_reason` / `exclusion_reason`, génération du snapshot d'audit. Tests unitaires
+couvrant les 10 scénarios d'acceptation.
 
-Aucune modification du code applicatif, aucune modification du backend.
+### Phase 3 — Assistant de profilage
+Parcours en 5 étapes (Organisation, Activité, Données traitées, Pratiques et outils,
+Périmètre généré) avec sauvegarde automatique, réponses Oui/Non/Je ne sais pas, activation
+automatique des modules liés et affichage de la raison d'inclusion.
 
-## Étapes à réaliser de ton côté (cPanel o2switch)
+### Phase 4 — Questionnaire dynamique et scoring
+`AuditDetail` alimenté par le snapshot, badges Obligatoire/Conditionnel/Recommandé/Hors périmètre,
+progression sur les seules questions applicables, réponses `CONFORME`/`NON_CONFORME`/`PARTIEL`/
+`NON_APPLICABLE` (justification obligatoire)/`NE_SAIT_PAS`, trois scores séparés
+(conformité réglementaire, maturité, couverture) avec barème configurable et mention
+« Indicateur d'aide à l'évaluation — ne constitue pas une certification de conformité RGPD ».
 
-### A. Nettoyer + identifier la cible
-1. cPanel → **Setup Node.js App** → supprime l'application Node créée automatiquement (inutile pour un site statique).
-2. cPanel → **Sous-domaines** → ouvre `rgpd.informatique-web.pro` → note le **Document Root** (souvent `public_html/rgpd`). C'est la cible du déploiement.
+### Phase 5 — Administration du référentiel
+Espace admin : secteurs, sous-secteurs, modules, questions (création, édition, archivage,
+duplication, versionnement), constructeur visuel de règles, aperçu pour un profil donné,
+contrôles de cohérence, import/export JSON/CSV, publication de version.
 
-### B. Créer un compte FTP dédié (recommandé)
-1. cPanel → **Comptes FTP** → Ajouter.
-   - Répertoire de connexion : le **Document Root** du sous-domaine (`public_html/rgpd/`), pour limiter l'accès à ce sous-domaine.
-   - Note : **hôte FTP** (`ftp.informatique-web.pro` ou l'IP du serveur), **utilisateur**, **mot de passe**, **port** (21 FTP / 22 SFTP).
+### Phase 6 — Rapports, section sectorielle santé, tests
+Rapports distinguant hors périmètre / contrôlé / conforme, structure d'accueil `sante-01`…`sante-30`
+et `sec-31` (test de restauration des sauvegardes) prête à recevoir les formulations juridiques,
+tests d'intégration et vérification de non-régression.
 
-### C. Configurer les secrets dans GitHub
-Dépôt GitHub → **Settings → Secrets and variables → Actions → New repository secret** :
-- `O2SWITCH_FTP_SERVER` — hôte FTP
-- `O2SWITCH_FTP_USERNAME` — utilisateur FTP créé
-- `O2SWITCH_FTP_PASSWORD` — mot de passe FTP
-- `O2SWITCH_FTP_PORT` — `21` (ou `990`/`22` selon ta config o2switch)
+## Points d'attention
 
-### D. Pousser sur `main` → déploiement auto
-Une fois le workflow poussé sur `main`, GitHub Actions compile et transfère. Vérifier l'onglet **Actions** du dépôt GitHub ; un run vert = site en ligne sur `https://rgpd.informatique-web.pro`.
+- Les formulations juridiques du module dentaire ne seront pas inventées : la structure et l'import
+  sont préparés, les libellés définitifs restent à fournir.
+- Les audits déjà finalisés conservent leurs questions et leurs scores d'origine.
+- Les audits en brouillon ne basculent sur le nouveau moteur qu'après confirmation explicite.
 
-## Points techniques / sécurité
-- **Certificat SSL** : o2switch fournit un Let's Encrypt gratuit. cPanel → **SSL/TLS** (ou *AutoSSL*) : activer le cert pour `rgpd.informatique-web.pro` et forcer la redirection HTTPS.
-- **Backend Lovable Cloud** : inchangé. Le frontend o2switch appelle l'API Lovable Cloud via HTTPS (CORS déjà ouvert côté Supabase). Les identifiants Supabase (URL + clé publishable) sont intégrés au build — ce sont des clés publiables, c'est normal et sûr.
-- **Base path** : servi à la racine du sous-domaine, pas de `base` personnalisé.
-- **Bouton « Publier » Lovable** : non concerné. Le backend reste sur Lovable ; `rgpd.lovable.app` reste actif en parallèle.
-
-## Alternative : compiler directement sur o2switch (sans CI/CD)
-Si tu préfères te passer de GitHub Actions et que tu as un accès **SSH** (cPanel → *Terminal* ou SSH) :
-1. Se placer dans le dossier où tu as importé les sources GitHub.
-2. `npm install` puis `npm run build` (surveille la mémoire ; un build peut échouer sur un hébergement mutualisé trop juste — d'où l'intérêt du CI/CD).
-3. Copier le contenu de `dist/` (`.htaccess` inclus) dans le **Document Root** du sous-domaine.
-4. Refaire à chaque mise à jour.
-Si le build plante sur o2switch (mémoire/timeout), reviens à la méthode CI/CD ci-dessus — c'est exactement ce qu'elle évite.
-
-## Plan de validation
-1. Le run GitHub Actions passe au vert (ou le build local aboutit).
-2. `https://rgpd.informatique-web.pro` affiche la page de connexion.
-3. Refresh sur une route interne (`/portail/actions`) → pas de 404 (validateur du `.htaccess`).
-4. Connexion d'un compte → l'auth Lovable Cloud répond → page dashboard.
+On démarre par la Phase 1.
