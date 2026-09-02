@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   LayoutDashboard, Building2, ClipboardCheck, FileText, ListChecks, BookOpen, LogOut, Shield, ClipboardList, CalendarDays,
-  Handshake, FileQuestion, TriangleAlert, CheckCircle, ShieldCheck, Users as UsersIcon,
+  Handshake, FileQuestion, TriangleAlert, CheckCircle, ShieldCheck, Users as UsersIcon, Library,
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +24,7 @@ const auditorItems = [
   { title: "Plan d'actions", url: "/actions", icon: ListChecks },
   { title: "Calendrier", url: "/calendrier", icon: CalendarDays },
   { title: "Bibliothèque", url: "/bibliotheque", icon: BookOpen },
+  { title: "Référentiel", url: "/referentiel", icon: Library },
 ];
 
 const clientItems = [
