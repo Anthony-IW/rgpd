@@ -27,6 +27,9 @@ import { generateAuditPDF } from "@/lib/pdfReport";
 import { ExportMenu } from "@/components/ExportMenu";
 import { exportAuditXLSX } from "@/lib/exports/excelExport";
 import { QuestionnaireExportDialog } from "@/components/QuestionnaireExportDialog";
+import { DynamicQuestionnaire } from "@/components/DynamicQuestionnaire";
+import { computeScopeScores, type ScopedSnapshotQuestion } from "@/lib/auditScoring";
+import { generateAuditScope } from "@/lib/auditEngine";
 
 export default function AuditDetail() {
   const { id } = useParams();
@@ -38,6 +41,18 @@ export default function AuditDetail() {
   const [saving, setSaving] = useState(false);
   const [actionQids, setActionQids] = useState<Set<string>>(new Set());
   const [actionMap, setActionMap] = useState<Record<string, string>>({});
+  const [snapshot, setSnapshot] = useState<ScopedSnapshotQuestion[]>([]);
+  const [scopeMeta, setScopeMeta] = useState<any>(null);
+  const [regenerating, setRegenerating] = useState(false);
+
+  const loadSnapshot = async (auditId: string) => {
+    const [{ data: snap }, { data: meta }] = await Promise.all([
+      supabase.from("audit_questions_snapshot").select("*").eq("audit_id", auditId).order("position"),
+      supabase.from("audit_scope_snapshot").select("*").eq("audit_id", auditId).maybeSingle(),
+    ]);
+    setSnapshot((snap as any) || []);
+    setScopeMeta(meta);
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -58,12 +73,33 @@ export default function AuditDetail() {
       });
       setActionQids(qids);
       setActionMap(amap);
+      await loadSnapshot(id);
     })();
   }, [id]);
 
-  const globalScore = useMemo(() => computeGlobalScore(responses), [responses]);
-  const totalQ = totalQuestions();
-  const answeredCount = Object.values(responses).filter((r: any) => r.level && r.level !== "a_evaluer").length;
+  const isDynamic = snapshot.length > 0;
+  const scopeScores = useMemo(() => computeScopeScores(snapshot, responses), [snapshot, responses]);
+  const staticScore = useMemo(() => computeGlobalScore(responses), [responses]);
+  const globalScore = isDynamic ? scopeScores.global : staticScore;
+  const totalQ = isDynamic ? scopeScores.total : totalQuestions();
+  const answeredCount = isDynamic
+    ? scopeScores.answered
+    : Object.values(responses).filter((r: any) => r.level && r.level !== "a_evaluer").length;
+
+  const regenerateScope = async () => {
+    if (!company) return;
+    setRegenerating(true);
+    try {
+      await generateAuditScope(id!, company.id);
+      await loadSnapshot(id!);
+      toast.success("Périmètre recalculé");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
 
   const updateResponse = async (q: any, category: string, patch: any) => {
     const existing = responses[q.id];
