@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { AUDIT_STATUS_META } from "@/data/rgpdReferential";
+import { generateAuditScope } from "@/lib/auditEngine";
 
 export default function Audits() {
   const { user } = useAuth();
@@ -47,9 +48,22 @@ export default function Audits() {
       start_date: new Date().toISOString().slice(0, 10),
     }).select().single();
     if (error) return toast.error(error.message);
+    const { data: prof } = await supabase
+      .from("company_profiles").select("completed_at").eq("company_id", form.company_id).maybeSingle();
+    if (prof?.completed_at) {
+      try {
+        const scope = await generateAuditScope(data.id, form.company_id);
+        toast.success(`Audit créé — ${scope.questions.filter((q) => q.included).length} questions applicables`);
+      } catch (e: any) {
+        toast.error(`Périmètre non généré : ${e.message}`);
+      }
+    } else {
+      toast.info("Astuce : lancez l'assistant de profilage de l'entreprise pour adapter le questionnaire");
+    }
     setOpen(false);
     navigate(`/audits/${data.id}`);
   };
+
   const removeAudit = async (auditId: string) => {
     const { error } = await supabase.from("audits").delete().eq("id", auditId);
     if (error) return toast.error(error.message);

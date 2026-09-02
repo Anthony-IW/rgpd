@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Companies from "./pages/Companies";
 import CompanyForm from "./pages/CompanyForm";
 import CompanyDetail from "./pages/CompanyDetail";
+import CompanyProfilePage from "./pages/CompanyProfile";
 import Audits from "./pages/Audits";
 import AuditDetail from "./pages/AuditDetail";
 import Registry from "./pages/Registry";
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="/entreprises/nouveau" element={<CompanyForm />} />
               <Route path="/entreprises/:id" element={<CompanyDetail />} />
               <Route path="/entreprises/:id/edit" element={<CompanyForm />} />
+              <Route path="/entreprises/:id/profil" element={<CompanyProfilePage />} />
               <Route path="/audits" element={<Audits />} />
               <Route path="/audits/:id" element={<AuditDetail />} />
               <Route path="/registre" element={<Registry />} />
