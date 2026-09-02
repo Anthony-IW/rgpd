@@ -31,6 +31,7 @@ export default function CompanyDetail() {
   const [audits, setAudits] = useState<any[]>([]);
   const [processing, setProcessing] = useState<any[]>([]);
   const [actions, setActions] = useState<any[]>([]);
+  const [hasProfile, setHasProfile] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -38,12 +39,14 @@ export default function CompanyDetail() {
     (async () => {
       const { data } = await supabase.from("companies").select("*").eq("id", id).single();
       setCompany(data);
-      const [a, p, ac] = await Promise.all([
+      const [a, p, ac, prof] = await Promise.all([
         supabase.from("audits").select("*").eq("company_id", id).order("created_at", { ascending: false }),
         supabase.from("processing_records").select("*").eq("company_id", id),
         supabase.from("action_plans").select("*").eq("company_id", id),
+        supabase.from("company_profiles").select("id, completed_at").eq("company_id", id).maybeSingle(),
       ]);
       setAudits(a.data || []); setProcessing(p.data || []); setActions(ac.data || []);
+      setHasProfile(!!prof.data?.completed_at);
     })();
   }, [id]);
 
@@ -54,9 +57,19 @@ export default function CompanyDetail() {
       status: "draft", start_date: new Date().toISOString().slice(0, 10),
     }).select().single();
     if (error) return toast.error(error.message);
-    toast.success("Audit créé");
+    if (hasProfile) {
+      try {
+        const scope = await generateAuditScope(data.id, id!);
+        toast.success(`Audit créé — ${scope.questions.filter((q) => q.included).length} questions applicables`);
+      } catch (e: any) {
+        toast.error(`Périmètre non généré : ${e.message}`);
+      }
+    } else {
+      toast.success("Audit créé");
+    }
     navigate(`/audits/${data.id}`);
   };
+
 
   const deleteCompany = async () => {
     const { error } = await supabase.from("companies").delete().eq("id", id);
