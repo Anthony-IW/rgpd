@@ -234,3 +234,95 @@ export function exportGenericXLSX({
   XLSX.utils.book_append_sheet(wb, aoaSheet([columns, ...rows]), sheetName.slice(0, 31));
   save(wb, fileName(slug(baseName), "xlsx", companyName));
 }
+/* -------- Audit dynamique (périmètre sectoriel) -------- */
+const SCOPE_LEVELS: Record<string, string> = {
+  conforme: "Conforme",
+  partiel: "Partiellement conforme",
+  non_conforme: "Non conforme",
+  non_applicable: "Non applicable",
+  ne_sait_pas: "Ne sait pas",
+  a_evaluer: "À évaluer",
+};
+const SCOPE_STATUS: Record<string, string> = {
+  OBLIGATOIRE: "Obligatoire",
+  OBLIGATOIRE_SI_APPLICABLE: "Obligatoire si applicable",
+  RECOMMANDE: "Recommandé",
+  NON_OBLIGATOIRE_EN_TANT_QUE_TEL: "Non obligatoire",
+};
+const SCOPE_RISK: Record<string, string> = {
+  faible: "Faible", moyen: "Moyen", eleve: "Élevé", critique: "Critique",
+};
+
+export function exportScopeAuditXLSX(data: {
+  audit: any;
+  company: any;
+  snapshot: any[];
+  responses: Record<string, any>;
+  scopeMeta: any;
+  scores: { regulatory: number; maturity: number; coverage: number; global: number; answered: number; total: number };
+}) {
+  const { audit, company, snapshot, responses, scopeMeta, scores } = data;
+  const wb = XLSX.utils.book_new();
+  const included = snapshot.filter((q) => q.included);
+  const excluded = snapshot.filter((q) => !q.included);
+
+  XLSX.utils.book_append_sheet(wb, aoaSheet([
+    ["Rapport d'audit RGPD — périmètre dynamique"],
+    ["Entreprise", company?.name],
+    ["Audit", audit?.title],
+    ["Date", fmtDate(audit?.audit_date || audit?.created_at)],
+    [],
+    ["Score réglementaire (%)", scores.regulatory],
+    ["Score de maturité (%)", scores.maturity],
+    ["Couverture (%)", scores.coverage],
+    ["Score global (%)", scores.global],
+    ["Questions traitées", `${scores.answered}/${scores.total}`],
+    ["Questions du référentiel", snapshot.length],
+    ["Questions hors périmètre", excluded.length],
+  ]), "Synthèse");
+
+  const modIn = Array.isArray(scopeMeta?.included_modules) ? scopeMeta.included_modules : [];
+  const modOut = Array.isArray(scopeMeta?.excluded_modules) ? scopeMeta.excluded_modules : [];
+  XLSX.utils.book_append_sheet(wb, aoaSheet([
+    ["Module", "Statut", "Motif"],
+    ...modIn.map((m: any) => [m.label, "Retenu", m.reason]),
+    ...modOut.map((m: any) => [m.label, "Écarté", m.reason]),
+  ]), "Périmètre");
+
+  XLSX.utils.book_append_sheet(wb, aoaSheet([
+    ["Réf.", "Domaine", "Exigence", "Statut légal", "Risque", "Poids", "Évaluation", "Commentaire", "Justification", "Preuve", "Recommandation", "Motif d'inclusion"],
+    ...included.map((q: any) => {
+      const r = responses[q.question_code] || {};
+      return [
+        q.question_code, q.category_name || q.category_id, q.text,
+        SCOPE_STATUS[q.legal_status] ?? q.legal_status,
+        SCOPE_RISK[q.risk] ?? q.risk, q.weight,
+        SCOPE_LEVELS[r.level] ?? "À évaluer",
+        r.comment ?? "", r.justification ?? "", r.evidence ?? "", r.recommendation ?? "",
+        q.inclusion_reason ?? "",
+      ];
+    }),
+  ]), "Exigences évaluées");
+
+  XLSX.utils.book_append_sheet(wb, aoaSheet([
+    ["Réf.", "Domaine", "Exigence", "Motif d'exclusion"],
+    ...excluded.map((q: any) => [q.question_code, q.category_name || q.category_id, q.text, q.exclusion_reason ?? ""]),
+  ]), "Hors périmètre");
+
+  const riskOrder: Record<string, number> = { critique: 0, eleve: 1, moyen: 2, faible: 3 };
+  const gaps = included
+    .filter((q: any) => ["non_conforme", "partiel"].includes(responses[q.question_code]?.level))
+    .sort((a: any, b: any) => (riskOrder[a.risk] ?? 9) - (riskOrder[b.risk] ?? 9) || (b.weight || 1) - (a.weight || 1));
+  XLSX.utils.book_append_sheet(wb, aoaSheet([
+    ["Réf.", "Domaine", "Exigence", "Statut légal", "Risque", "Évaluation", "Recommandation"],
+    ...gaps.map((q: any) => [
+      q.question_code, q.category_name || q.category_id, q.text,
+      SCOPE_STATUS[q.legal_status] ?? q.legal_status,
+      SCOPE_RISK[q.risk] ?? q.risk,
+      SCOPE_LEVELS[responses[q.question_code]?.level] ?? "",
+      responses[q.question_code]?.recommendation ?? "",
+    ]),
+  ]), "Écarts prioritaires");
+
+  save(wb, fileName("rapport_audit_sectoriel", "xlsx", company?.name));
+}
