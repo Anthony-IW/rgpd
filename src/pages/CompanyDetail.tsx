@@ -106,6 +106,9 @@ export default function CompanyDetail() {
           <>
             <ExportMenu onPdf={exportPdf} onExcel={() => exportCompanySheetXLSX(company, audits, processing, actions)} />
             <Button variant="outline" onClick={() => navigate(`/entreprises/${id}/edit`)}><Edit className="mr-2 h-4 w-4" />Modifier</Button>
+            <Button variant={hasProfile ? "outline" : "default"} className={hasProfile ? "" : "bg-gradient-primary"} onClick={() => navigate(`/entreprises/${id}/profil`)}>
+              <Wand2 className="mr-2 h-4 w-4" />{hasProfile ? "Profil d'organisation" : "Assistant de profilage"}
+            </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline" className="text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></Button>
