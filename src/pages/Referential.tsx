@@ -224,8 +224,8 @@ export default function Referential() {
   };
 
   if (loading) return null;
-  if (!isAdmin && !isAuditor) {
-    return <p className="p-6 text-muted-foreground">Accès réservé aux auditeurs.</p>;
+  if (!isAdmin) {
+    return <p className="p-6 text-muted-foreground">Accès réservé aux administrateurs.</p>;
   }
 
   return (
