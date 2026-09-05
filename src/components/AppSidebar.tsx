@@ -1,29 +1,37 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter,
+  SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton, useSidebar,
 } from "@/components/ui/sidebar";
 import {
+  Collapsible, CollapsibleContent, CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   LayoutDashboard, Building2, ClipboardCheck, FileText, ListChecks, BookOpen, LogOut, Shield, ClipboardList, CalendarDays,
-  Handshake, FileQuestion, TriangleAlert, CheckCircle, ShieldCheck, Users as UsersIcon, Library, ScrollText,
+  Handshake, FileQuestion, TriangleAlert, CheckCircle, ShieldCheck, Users as UsersIcon, Library, ScrollText, ChevronDown,
+  FolderCog, Settings,
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "./ui/button";
 
-const auditorItems = [
+const mainItems = [
   { title: "Tableau de bord", url: "/", icon: LayoutDashboard },
   { title: "Entreprises", url: "/entreprises", icon: Building2 },
   { title: "Audits RGPD", url: "/audits", icon: ClipboardCheck },
-  { title: "Registre traitements", url: "/registre", icon: FileText },
+  { title: "Plan d'actions", url: "/actions", icon: ListChecks },
+  { title: "Calendrier", url: "/calendrier", icon: CalendarDays },
+  { title: "Bibliothèque", url: "/bibliotheque", icon: BookOpen },
+];
+
+const rgpdToolItems = [
+  { title: "Registre des traitements", url: "/registre", icon: FileText },
   { title: "Sous-traitants & DPA", url: "/sous-traitants", icon: Handshake },
   { title: "Demandes de droits", url: "/droits", icon: FileQuestion },
   { title: "Violations", url: "/violations", icon: TriangleAlert },
   { title: "Consentements", url: "/consentements", icon: CheckCircle },
   { title: "DPIA", url: "/dpia", icon: ShieldCheck },
-  { title: "Plan d'actions", url: "/actions", icon: ListChecks },
-  { title: "Calendrier", url: "/calendrier", icon: CalendarDays },
-  { title: "Bibliothèque", url: "/bibliotheque", icon: BookOpen },
 ];
 
 const adminItems = [
@@ -43,13 +51,11 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
   const { signOut, user, isClient, isAuditor, isAdmin } = useAuth();
-  const items = isClient && !isAuditor && !isAdmin
-    ? clientItems
-    : isAdmin
-      ? [...auditorItems, ...adminItems]
-      : auditorItems;
+  const clientOnly = isClient && !isAuditor && !isAdmin;
 
   const isActive = (url: string) => url === "/" ? pathname === "/" : pathname.startsWith(url);
+  const rgpdExpanded = rgpdToolItems.some((item) => isActive(item.url));
+  const adminExpanded = adminItems.some((item) => isActive(item.url));
 
   return (
     <Sidebar collapsible="icon">
@@ -70,16 +76,87 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                    <NavLink to={item.url} end={item.url === "/"}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {clientOnly ? (
+                clientItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+                      <NavLink to={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))
+              ) : (
+                <>
+                  {mainItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+                        <NavLink to={item.url} end={item.url === "/"}>
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+
+                  {/* Onglet Outils RGPD */}
+                  <Collapsible asChild defaultOpen={rgpdExpanded} className="group/collapsible">
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton tooltip="Outils RGPD">
+                          <FolderCog />
+                          <span>Outils RGPD</span>
+                          <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {rgpdToolItems.map((item) => (
+                            <SidebarMenuSubItem key={item.title}>
+                              <SidebarMenuSubButton asChild isActive={isActive(item.url)}>
+                                <NavLink to={item.url}>
+                                  <item.icon />
+                                  <span>{item.title}</span>
+                                </NavLink>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+
+                  {/* Onglet Administration */}
+                  {isAdmin && (
+                    <Collapsible asChild defaultOpen={adminExpanded} className="group/collapsible">
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton tooltip="Administration">
+                            <Settings />
+                            <span>Administration</span>
+                            <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {adminItems.map((item) => (
+                              <SidebarMenuSubItem key={item.title}>
+                                <SidebarMenuSubButton asChild isActive={isActive(item.url)}>
+                                  <NavLink to={item.url}>
+                                    <item.icon />
+                                    <span>{item.title}</span>
+                                  </NavLink>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  )}
+                </>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
